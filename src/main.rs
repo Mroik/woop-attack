@@ -1,3 +1,5 @@
+mod game;
+
 use serde::{Deserialize, Serialize};
 use warp::{reply::Json, Filter};
 
@@ -26,6 +28,10 @@ async fn main() {
 }
 
 fn handle_request() -> Json {
-    let entity = Entity { x: 0, y: 0, type_: EntityType::Human };
+    let entity = Entity {
+        x: 0,
+        y: 0,
+        type_: EntityType::Human,
+    };
     warp::reply::json(&GameReq::List(entity))
 }
