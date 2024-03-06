@@ -37,10 +37,16 @@ Basic actions:
 - Special actions:
     - A player can use an action to donate points
     - A player can donate any amount of points they have
-    - A player can build a zord by spending 10 points
+    - A player can build a zord by spending 10 points and using an action
     - A player can use an action to increase their range by one
     - At the end of the day the range returns to its base value
     - A player can spend 5 points to gift an action to another player
+
+Objectives:
+- Across the map there are multiple totems
+- Only some of the totems are active each week
+- At the end of the day the totem awards 40 points distributed equally among the players based on
+    the zords in the totem area
 
 Tecnicalities
 ============
