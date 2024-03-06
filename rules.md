@@ -40,6 +40,7 @@ Basic actions:
     - A player can build a zord by spending 10 points
     - A player can use an action to increase their range by one
     - At the end of the day the range returns to its base value
+    - A player can spend 5 points to gift an action to another player
 
 Tecnicalities
 ============
