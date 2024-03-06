@@ -7,8 +7,8 @@ Rules
 Basic rules:
 - A game lasts 4 weeks
 - A player can control up to 3 zords
-- A zord has 3 lives
-- Lives of each zord are restored to 3 at the beginning of the week
+- A zord has 2 lives
+- Lives of each zord are restored to 2 at the beginning of the week
 - Each player each day gets 5 actions per day
 - Unused actions at the end of the day are lost
 - Each player starts out with 0 points
