@@ -1,3 +1,5 @@
+use super::totem::Totem;
+
 const BASE_RANGE: u8 = 5;
 const BASE_HP: u8 = 2;
 
@@ -9,19 +11,9 @@ struct Zord {
     range: u8,
 }
 
-struct Totem {
-    x: i32,
-    y: i32,
-}
-
-enum Entity {
+pub enum Entity {
     Zord(Zord),
     Totem(Totem),
-}
-
-struct Board {
-    size: u16,
-    board: Vec<Entity>,
 }
 
 // Since move requires for the board to be passed it is implemented in board
