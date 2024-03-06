@@ -3,7 +3,7 @@ use super::totem::Totem;
 const BASE_RANGE: u8 = 5;
 const BASE_HP: u8 = 2;
 
-struct Zord {
+pub struct Zord {
     x: i32,
     y: i32,
     hp: u8,
@@ -42,33 +42,57 @@ impl Zord {
 }
 
 #[cfg(test)]
-mod zord_tests {
+mod tests {
     use super::Zord;
 
     #[test]
     fn survive_hit() {
-        let mut z = Zord { x: 0, y: 0, hp: 2, shields: 0, range: 5 };
+        let mut z = Zord {
+            x: 0,
+            y: 0,
+            hp: 2,
+            shields: 0,
+            range: 5,
+        };
         assert!(!z.hit());
         assert_eq!(z.hp, 1);
     }
 
     #[test]
     fn die_on_hit() {
-        let mut z = Zord { x: 0, y: 0, hp: 1, shields: 0, range: 5 };
+        let mut z = Zord {
+            x: 0,
+            y: 0,
+            hp: 1,
+            shields: 0,
+            range: 5,
+        };
         assert!(z.hit());
         assert_eq!(z.hp, 0);
     }
 
     #[test]
     fn increase_range() {
-        let mut z = Zord { x: 0, y: 0, hp: 2, shields: 0, range: 5 };
+        let mut z = Zord {
+            x: 0,
+            y: 0,
+            hp: 2,
+            shields: 0,
+            range: 5,
+        };
         z.increase_range();
         assert_eq!(z.range, 6);
     }
 
     #[test]
     fn generate_shield() {
-        let mut z = Zord { x: 0, y: 0, hp: 2, shields: 0, range: 5 };
+        let mut z = Zord {
+            x: 0,
+            y: 0,
+            hp: 2,
+            shields: 0,
+            range: 5,
+        };
         z.generate_shield();
         assert_eq!(z.shields, 1);
     }
