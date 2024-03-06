@@ -13,7 +13,7 @@ Basic rules:
 - Unused actions at the end of the day are lost
 - Each player starts out with 0 points
 - A kill is rewarded with 3 points
-- Dying halves your points (`floor(points / 2)`)
+- Losing all zords makes the player lose a third of their points (`floor(points * 2 / 3)`)
 - Players out of zords respawn after 2 days
 - At the end of the game the player with the most points wins
 
