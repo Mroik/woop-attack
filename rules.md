@@ -20,6 +20,7 @@ Basic rules:
 Basic actions:
 - Combat:
     - A player can use an action point to shoot another player
+    - A player can shoot only after 3 hours from the beginning of the day
     - A player can only shoot players within their range
     - The base range is 5 squares
     - The distance between 2 squares is calculated as follows:
