@@ -16,8 +16,8 @@ impl Game {
         }
     }
 
-    // Check if any in cell, check player actions, check range, shoot
     fn player_shoot(&mut self, x_f: i32, y_f: i32, x_t: i32, y_t: i32) -> bool {
+        // Check if zord in cell
         let zord = self
             .board
             .board
@@ -27,6 +27,7 @@ impl Game {
             return false;
         }
 
+        // Check if within range
         let zord = zord.unwrap().get_zord().unwrap();
         let range = zord.range;
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
@@ -34,12 +35,18 @@ impl Game {
             return false;
         }
 
-        let owner = self.players.iter_mut().find(|o| zord.owner == o.name.as_str()).unwrap();
+        // Check if enough actions
+        let owner = self
+            .players
+            .iter_mut()
+            .find(|o| zord.owner == o.name.as_str())
+            .unwrap();
         if owner.actions == 0 {
             return false;
         }
         owner.spend_action();
 
+        // Shoot and cleanup
         self.board
             .board
             .iter_mut()
@@ -51,6 +58,7 @@ impl Game {
         true
     }
 
+    // Clean up dead zords
     fn clear_dead(&mut self) {
         self.board.board.retain(|entity| {
             if !entity.is_zord() {
@@ -61,6 +69,7 @@ impl Game {
         });
     }
 
+    // Add zord to the board
     fn create_zord(&mut self, player: &Player, x: i32, y: i32) {
         let z = Entity::Zord(Zord::new(player, x, y));
         self.board.board.push(z);
