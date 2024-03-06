@@ -7,6 +7,8 @@ Rules
 Basic rules:
 - A game lasts 4 weeks
 - A player can control up to 3 zords
+- A zord has 3 lives
+- Lives of each zord are restored to 3 at the beginning of the week
 - Each player each day gets 5 actions per day
 - Unused actions at the end of the day are lost
 - Each player starts out with 0 points
@@ -22,7 +24,8 @@ Basic actions:
     - The base range is 5 squares
     - The distance between 2 squares is calculated as follows:
         `max(abs(x_f - x_t), abs(y_f - y_t))`
-    - A player dies if shot directly
+    - If hit directly a zord loses a life
+    - A zord dies if they lose all lives
     - A player can use an action to build a shield
     - A player can build multiple shields
     - A shield is consumed when shot by another player
@@ -42,3 +45,5 @@ Tecnicalities
 
 - Every player can see the amount of active shields everyone has
 - Every player can see the amount of points everyone else
+- Every player can see the range of everyone else
+- Every player can see amount of lives of every zord
