@@ -1,8 +1,9 @@
 const BASE_ACTIONS: u8 = 5;
 
+#[derive(PartialEq, Clone)]
 pub struct Player {
     pub name: String,
-    actions: u8,
+    pub actions: u8,
     points: u16,
 }
 
@@ -13,5 +14,9 @@ impl Player {
             actions: BASE_ACTIONS,
             points: 0,
         }
+    }
+
+    pub fn spend_action(&mut self) {
+        self.actions -= 1;
     }
 }

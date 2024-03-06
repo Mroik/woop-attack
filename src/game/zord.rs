@@ -1,24 +1,32 @@
-use super::totem::Totem;
+use super::player::Player;
 
 const BASE_RANGE: u8 = 5;
 const BASE_HP: u8 = 2;
 
+#[derive(Debug)]
 pub struct Zord {
-    x: i32,
-    y: i32,
-    hp: u8,
+    pub x: i32,
+    pub y: i32,
+    pub hp: u8,
     shields: u8,
-    range: u8,
-}
-
-pub enum Entity {
-    Zord(Zord),
-    Totem(Totem),
+    pub range: u8,
+    pub owner: String,
 }
 
 // Since move requires for the board to be passed it is implemented in board
 impl Zord {
-    fn hit(&mut self) -> bool {
+    pub fn new(owner: &Player, x: i32, y: i32) -> Self {
+        Zord {
+            x,
+            y,
+            hp: BASE_HP,
+            shields: 0,
+            range: BASE_RANGE,
+            owner: owner.name.clone(),
+        }
+    }
+
+    pub fn hit(&mut self) -> bool {
         if self.shields > 0 {
             self.shields -= 1;
         } else {
@@ -43,56 +51,39 @@ impl Zord {
 
 #[cfg(test)]
 mod tests {
+    use crate::game::player::Player;
+
     use super::Zord;
 
     #[test]
     fn survive_hit() {
-        let mut z = Zord {
-            x: 0,
-            y: 0,
-            hp: 2,
-            shields: 0,
-            range: 5,
-        };
+        let player = Player::new("ciao");
+        let mut z = Zord::new(&player, 0, 0);
         assert!(!z.hit());
         assert_eq!(z.hp, 1);
     }
 
     #[test]
     fn die_on_hit() {
-        let mut z = Zord {
-            x: 0,
-            y: 0,
-            hp: 1,
-            shields: 0,
-            range: 5,
-        };
+        let player = Player::new("ciao");
+        let mut z = Zord::new(&player, 0, 0);
+        z.hit();
         assert!(z.hit());
         assert_eq!(z.hp, 0);
     }
 
     #[test]
     fn increase_range() {
-        let mut z = Zord {
-            x: 0,
-            y: 0,
-            hp: 2,
-            shields: 0,
-            range: 5,
-        };
+        let player = Player::new("ciao");
+        let mut z = Zord::new(&player, 0, 0);
         z.increase_range();
         assert_eq!(z.range, 6);
     }
 
     #[test]
     fn generate_shield() {
-        let mut z = Zord {
-            x: 0,
-            y: 0,
-            hp: 2,
-            shields: 0,
-            range: 5,
-        };
+        let player = Player::new("ciao");
+        let mut z = Zord::new(&player, 0, 0);
         z.generate_shield();
         assert_eq!(z.shields, 1);
     }

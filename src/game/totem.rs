@@ -1,4 +1,5 @@
+#[derive(Debug)]
 pub struct Totem {
-    x: i32,
-    y: i32,
+    pub x: i32,
+    pub y: i32,
 }
