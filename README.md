@@ -8,9 +8,9 @@ Basic actions:
         `max(abs(x_f - x_t), abs(y_f - y_t))`
     - [x] If hit directly a zord loses a life
     - [x] A zord dies if they lose all lives
-    - [ ] A player can use an action to build a shield
-    - [ ] A player can build multiple shields
-    - [ ] A shield is consumed when shot by another player
+    - [x] A player can use an action to build a shield
+    - [x] A player can build multiple shields
+    - [x] A shield is consumed when shot by another player
     - [ ] A shield lasts until the end of the day
 - Movement:
     - [ ] A player can use an action to move a zord one square
