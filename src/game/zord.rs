@@ -8,7 +8,7 @@ pub struct Zord {
     pub x: i32,
     pub y: i32,
     pub hp: u8,
-    shields: u8,
+    pub shields: u8,
     pub range: u8,
     pub owner: String,
 }
@@ -39,7 +39,7 @@ impl Zord {
         self.range += 1;
     }
 
-    fn generate_shield(&mut self) {
+    pub fn generate_shield(&mut self) {
         self.shields += 1;
     }
 

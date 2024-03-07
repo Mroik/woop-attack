@@ -34,4 +34,14 @@ impl Entity {
             _ => false,
         }
     }
+
+    pub fn zord_generate_shield(&mut self) -> bool {
+        match self {
+            Entity::Zord(z) => {
+                z.generate_shield();
+                true
+            },
+            _ => false,
+        }
+    }
 }

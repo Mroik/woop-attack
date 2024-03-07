@@ -16,6 +16,34 @@ impl Game {
         }
     }
 
+    fn generate_shield(&mut self, x_f: i32, y_f: i32) -> bool {
+        // Check if zord in cell
+        let zord = self
+            .board
+            .board
+            .iter_mut()
+            .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord());
+        if zord.is_none() {
+            return false;
+        }
+
+        let zord = zord.unwrap();
+
+        // Check if enough actions
+        let name = zord.get_zord().unwrap().owner.as_str();
+        let owner = self
+            .players
+            .iter_mut()
+            .find(|o| name == o.name.as_str())
+            .unwrap();
+        if owner.actions == 0 {
+            return false;
+        }
+        owner.spend_action();
+
+        zord.zord_generate_shield()
+    }
+
     fn player_shoot(&mut self, x_f: i32, y_f: i32, x_t: i32, y_t: i32) -> bool {
         // Check if zord in cell
         let zord = self
@@ -125,5 +153,32 @@ mod tests {
         game.create_zord(&p, 1, 1);
         let success = game.player_shoot(2, 2, 0, 0);
         assert!(!success);
+    }
+
+    #[test]
+    fn generate_shield() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let success = game.generate_shield(0, 0);
+        let zord = game.board.board.first().unwrap().get_zord().unwrap();
+        assert!(success);
+        assert_eq!(zord.shields, 1);
+    }
+
+    #[test]
+    fn generate_shield_no_actions() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        for _ in 0..5 {
+            game.generate_shield(0, 0);
+        }
+        let success = game.generate_shield(0, 0);
+        let zord = game.board.board.first().unwrap().get_zord().unwrap();
+        assert!(!success);
+        assert_eq!(zord.shields, 5);
     }
 }
