@@ -239,6 +239,17 @@ mod tests {
     }
 
     #[test]
+    fn increase_range() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        game.increase_range(0, 0);
+        assert_eq!(game.board.board.get(0).unwrap().get_zord().unwrap().range, 6);
+        assert_eq!(game.players.get(0).unwrap().actions, 4);
+    }
+
+    #[test]
     fn new_day() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
