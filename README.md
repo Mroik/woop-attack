@@ -11,7 +11,7 @@ Basic actions:
     - [x] A player can use an action to build a shield
     - [x] A player can build multiple shields
     - [x] A shield is consumed when shot by another player
-    - [ ] A shield lasts until the end of the day
+    - [x] A shield lasts until the end of the day
 - Movement:
     - [ ] A player can use an action to move a zord one square
     - [ ] A zord can only move in one of the eight adjacent square
