@@ -109,6 +109,26 @@ impl Game {
         self.board.board.push(z);
     }
 
+    fn new_day(&mut self) {
+        // Set new day
+        self.start_of_day = Instant::now();
+        self.day += 1;
+
+        // Reset actions
+        self.players.iter_mut().for_each(|player| player.actions = BASE_ACTIONS);
+
+        // Remove shields and reset range
+        self.board.board.iter_mut().for_each(|entity| {
+            match entity {
+                Entity::Zord(z) => {
+                    z.range = BASE_RANGE;
+                    z.shields = 0;
+                },
+                _ => (),
+            }
+        });
+    }
+
     fn increase_range(&mut self, x: i32, y: i32) -> bool {
         // Check if zord in cell
         let zord = self
@@ -140,6 +160,8 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
+    use crate::game::{player::BASE_ACTIONS, zord::BASE_RANGE};
+
     use super::Game;
 
     #[test]
@@ -222,7 +244,14 @@ mod tests {
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(&p, 0, 0);
+        game.new_day();
         game.generate_shield(0, 0);
         game.increase_range(0, 0);
+        game.new_day();
+        let zord = game.board.board.get(0).unwrap().get_zord().unwrap();
+        assert_eq!(game.day, 2);
+        assert_eq!(game.players.get(0).unwrap().actions, BASE_ACTIONS);
+        assert_eq!(zord.range, BASE_RANGE);
+        assert_eq!(zord.shields, 0);
     }
 }

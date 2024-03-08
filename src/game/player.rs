@@ -1,4 +1,4 @@
-const BASE_ACTIONS: u8 = 5;
+pub const BASE_ACTIONS: u8 = 5;
 
 #[derive(PartialEq, Clone)]
 pub struct Player {
