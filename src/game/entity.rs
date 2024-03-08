@@ -40,7 +40,7 @@ impl Entity {
             Entity::Zord(z) => {
                 z.generate_shield();
                 true
-            },
+            }
             _ => false,
         }
     }
@@ -50,7 +50,7 @@ impl Entity {
             Entity::Zord(z) => {
                 z.increase_range();
                 true
-            },
+            }
             _ => false,
         }
     }

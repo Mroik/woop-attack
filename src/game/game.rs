@@ -1,6 +1,11 @@
 use std::time::Instant;
 
-use super::{board::Board, entity::Entity, player::{Player, BASE_ACTIONS}, zord::{Zord, BASE_RANGE}};
+use super::{
+    board::Board,
+    entity::Entity,
+    player::{Player, BASE_ACTIONS},
+    zord::{Zord, BASE_RANGE},
+};
 
 const BASE_BOARD_SIZE: u16 = 10000;
 
@@ -115,17 +120,17 @@ impl Game {
         self.day += 1;
 
         // Reset actions
-        self.players.iter_mut().for_each(|player| player.actions = BASE_ACTIONS);
+        self.players
+            .iter_mut()
+            .for_each(|player| player.actions = BASE_ACTIONS);
 
         // Remove shields and reset range
-        self.board.board.iter_mut().for_each(|entity| {
-            match entity {
-                Entity::Zord(z) => {
-                    z.range = BASE_RANGE;
-                    z.shields = 0;
-                },
-                _ => (),
+        self.board.board.iter_mut().for_each(|entity| match entity {
+            Entity::Zord(z) => {
+                z.range = BASE_RANGE;
+                z.shields = 0;
             }
+            _ => (),
         });
     }
 
@@ -245,7 +250,10 @@ mod tests {
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(&p, 0, 0);
         game.increase_range(0, 0);
-        assert_eq!(game.board.board.get(0).unwrap().get_zord().unwrap().range, 6);
+        assert_eq!(
+            game.board.board.get(0).unwrap().get_zord().unwrap().range,
+            6
+        );
         assert_eq!(game.players.get(0).unwrap().actions, 4);
     }
 
