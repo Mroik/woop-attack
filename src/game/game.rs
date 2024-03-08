@@ -1,10 +1,14 @@
-use super::{board::Board, entity::Entity, player::Player, zord::Zord};
+use std::time::Instant;
+
+use super::{board::Board, entity::Entity, player::{Player, BASE_ACTIONS}, zord::{Zord, BASE_RANGE}};
 
 const BASE_BOARD_SIZE: u16 = 10000;
 
 struct Game {
     players: Vec<Player>,
     board: Board,
+    start_of_day: Instant,
+    day: u8,
 }
 
 impl Game {
@@ -13,6 +17,8 @@ impl Game {
         Game {
             players,
             board: Board::new(BASE_BOARD_SIZE),
+            start_of_day: Instant::now(),
+            day: 0,
         }
     }
 
@@ -102,6 +108,34 @@ impl Game {
         let z = Entity::Zord(Zord::new(player, x, y));
         self.board.board.push(z);
     }
+
+    fn increase_range(&mut self, x: i32, y: i32) -> bool {
+        // Check if zord in cell
+        let zord = self
+            .board
+            .board
+            .iter_mut()
+            .find(|entity| entity.is_coord(x, y) && entity.is_zord());
+        if zord.is_none() {
+            return false;
+        }
+
+        let zord = zord.unwrap();
+
+        // Check if enough actions
+        let name = zord.get_zord().unwrap().owner.as_str();
+        let owner = self
+            .players
+            .iter_mut()
+            .find(|o| name == o.name.as_str())
+            .unwrap();
+        if owner.actions == 0 {
+            return false;
+        }
+        owner.spend_action();
+
+        zord.zord_increase_range()
+    }
 }
 
 #[cfg(test)]
@@ -180,5 +214,15 @@ mod tests {
         let zord = game.board.board.first().unwrap().get_zord().unwrap();
         assert!(!success);
         assert_eq!(zord.shields, 5);
+    }
+
+    #[test]
+    fn new_day() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        game.generate_shield(0, 0);
+        game.increase_range(0, 0);
     }
 }

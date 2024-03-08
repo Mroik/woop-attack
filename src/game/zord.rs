@@ -1,6 +1,6 @@
 use super::player::Player;
 
-const BASE_RANGE: u8 = 5;
+pub const BASE_RANGE: u8 = 5;
 const BASE_HP: u8 = 2;
 
 #[derive(Debug)]
@@ -35,7 +35,7 @@ impl Zord {
         self.hp == 0
     }
 
-    fn increase_range(&mut self) {
+    pub fn increase_range(&mut self) {
         self.range += 1;
     }
 

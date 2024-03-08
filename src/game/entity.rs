@@ -44,4 +44,14 @@ impl Entity {
             _ => false,
         }
     }
+
+    pub fn zord_increase_range(&mut self) -> bool {
+        match self {
+            Entity::Zord(z) => {
+                z.increase_range();
+                true
+            },
+            _ => false,
+        }
+    }
 }
