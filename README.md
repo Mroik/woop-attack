@@ -13,8 +13,8 @@ Basic actions:
     - [x] A shield is consumed when shot by another player
     - [x] A shield lasts until the end of the day
 - Movement:
-    - [ ] A player can use an action to move a zord one square
-    - [ ] A zord can only move in one of the eight adjacent square
+    - [x] A player can use an action to move a zord one square
+    - [x] A zord can only move in one of the eight adjacent square
 - Special actions:
     - [ ] A player can use an action to donate points
     - [ ] A player can donate any amount of points they have

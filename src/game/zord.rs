@@ -5,8 +5,8 @@ const BASE_HP: u8 = 2;
 
 #[derive(Debug)]
 pub struct Zord {
-    pub x: i32,
-    pub y: i32,
+    pub x: i16,
+    pub y: i16,
     pub hp: u8,
     pub shields: u8,
     pub range: u8,
@@ -15,7 +15,7 @@ pub struct Zord {
 
 // Since move requires for the board to be passed it is implemented in board
 impl Zord {
-    pub fn new(owner: &Player, x: i32, y: i32) -> Self {
+    pub fn new(owner: &Player, x: i16, y: i16) -> Self {
         Zord {
             x,
             y,
@@ -43,9 +43,9 @@ impl Zord {
         self.shields += 1;
     }
 
-    fn day_reset(&mut self) {
-        self.shields = 0;
-        self.range = BASE_RANGE;
+    pub fn set_coord(&mut self, x: i16, y: i16) {
+        self.x = x;
+        self.y = y;
     }
 }
 

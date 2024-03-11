@@ -7,7 +7,7 @@ pub enum Entity {
 }
 
 impl Entity {
-    pub fn is_coord(&self, x: i32, y: i32) -> bool {
+    pub fn is_coord(&self, x: i16, y: i16) -> bool {
         match self {
             Entity::Zord(z) => z.x == x && z.y == y,
             Entity::Totem(t) => t.x == x && t.y == y,
@@ -49,6 +49,16 @@ impl Entity {
         match self {
             Entity::Zord(z) => {
                 z.increase_range();
+                true
+            }
+            _ => false,
+        }
+    }
+
+    pub fn move_zord(&mut self, x: i16, y: i16) -> bool {
+        match self {
+            Entity::Zord(z) => {
+                z.set_coord(x, y);
                 true
             }
             _ => false,

@@ -7,7 +7,7 @@ use super::{
     zord::{Zord, BASE_RANGE},
 };
 
-const BASE_BOARD_SIZE: u16 = 10000;
+const BASE_BOARD_SIZE: i16 = 10000;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 
 struct Game {
@@ -28,7 +28,7 @@ impl Game {
         }
     }
 
-    fn generate_shield(&mut self, x_f: i32, y_f: i32) -> bool {
+    fn generate_shield(&mut self, x_f: i16, y_f: i16) -> bool {
         // Check if zord in cell
         let zord = self
             .board
@@ -56,7 +56,55 @@ impl Game {
         zord.zord_generate_shield()
     }
 
-    fn player_shoot(&mut self, x_f: i32, y_f: i32, x_t: i32, y_t: i32) -> bool {
+    fn move_zord(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> bool {
+        // Check if empty
+        if self
+            .board
+            .board
+            .iter()
+            .find(|e| e.is_coord(x_t, y_t))
+            .is_some()
+        {
+            return false;
+        }
+
+        // Check if zord in cell
+        let zord = self
+            .board
+            .board
+            .iter_mut()
+            .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord());
+        if zord.is_none() {
+            return false;
+        }
+        let zord = zord.unwrap();
+
+        // Check if within range
+        let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
+        if distance > 1 {
+            return false;
+        }
+
+        // Check if in bounds
+        if x_t < 0 || x_t >= self.board.size || y_t < 0 || y_t >= self.board.size {
+            return false;
+        }
+
+        // Check if enough actions
+        let name = zord.get_zord().unwrap().owner.as_str();
+        let owner = self
+            .players
+            .iter_mut()
+            .find(|o| name == o.name.as_str())
+            .unwrap();
+        if owner.actions == 0 {
+            return false;
+        }
+        owner.spend_action();
+        zord.move_zord(x_t, y_t)
+    }
+
+    fn player_shoot(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> bool {
         // Check if zord in cell
         let zord = self
             .board
@@ -71,7 +119,7 @@ impl Game {
         let zord = zord.unwrap().get_zord().unwrap();
         let range = zord.range;
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
-        if distance > range as i32 {
+        if distance > range as i16 {
             return false;
         }
 
@@ -116,7 +164,7 @@ impl Game {
     }
 
     // Add zord to the board
-    fn create_zord(&mut self, player: &Player, x: i32, y: i32) {
+    fn create_zord(&mut self, player: &Player, x: i16, y: i16) {
         let z = Entity::Zord(Zord::new(player, x, y));
         self.board.board.push(z);
     }
@@ -141,7 +189,7 @@ impl Game {
         });
     }
 
-    fn increase_range(&mut self, x: i32, y: i32) -> bool {
+    fn increase_range(&mut self, x: i16, y: i16) -> bool {
         // Check if zord in cell
         let zord = self
             .board
@@ -191,7 +239,10 @@ mod tests {
     fn shoot_and_kill() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        game.start_of_day = game.start_of_day.checked_sub(Duration::from_secs(GRACE_PERIOD + 1)).unwrap();
+        game.start_of_day = game
+            .start_of_day
+            .checked_sub(Duration::from_secs(GRACE_PERIOD + 1))
+            .unwrap();
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(&p, 0, 0);
         let p = game.players.get(1).cloned().unwrap();
@@ -275,7 +326,7 @@ mod tests {
         game.create_zord(&p, 0, 0);
         game.increase_range(0, 0);
         assert_eq!(
-            game.board.board.get(0).unwrap().get_zord().unwrap().range,
+            game.board.board.first().unwrap().get_zord().unwrap().range,
             6
         );
         assert_eq!(game.players.get(0).unwrap().actions, 4);
@@ -291,10 +342,64 @@ mod tests {
         game.generate_shield(0, 0);
         game.increase_range(0, 0);
         game.new_day();
-        let zord = game.board.board.get(0).unwrap().get_zord().unwrap();
+        let zord = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(game.day, 2);
         assert_eq!(game.players.get(0).unwrap().actions, BASE_ACTIONS);
         assert_eq!(zord.range, BASE_RANGE);
         assert_eq!(zord.shields, 0);
+    }
+
+    #[test]
+    fn move_zord() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let success = game.move_zord(0, 0, 1, 1);
+        assert!(success);
+        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        assert_eq!(z.x, 1);
+        assert_eq!(z.y, 1);
+    }
+
+    #[test]
+    fn move_zord_out_of_bounds() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let success = game.move_zord(0, 0, -1, -1);
+        assert!(!success);
+        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        assert_eq!(z.x, 0);
+        assert_eq!(z.y, 0);
+    }
+
+    #[test]
+    fn move_zord_out_of_range() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let success = game.move_zord(0, 0, 2, 2);
+        assert!(!success);
+        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        assert_eq!(z.x, 0);
+        assert_eq!(z.y, 0);
+    }
+
+    #[test]
+    fn move_zord_cell_occupied() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let p = game.players.get(1).cloned().unwrap();
+        game.create_zord(&p, 1, 1);
+        let success = game.move_zord(0, 0, 1, 1);
+        assert!(!success);
+        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        assert_eq!(z.x, 0);
+        assert_eq!(z.y, 0);
     }
 }
