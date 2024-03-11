@@ -8,6 +8,7 @@ use super::{
 };
 
 const BASE_BOARD_SIZE: u16 = 10000;
+const GRACE_PERIOD: u64 = 60 * 60 * 3;
 
 struct Game {
     players: Vec<Player>,
@@ -71,6 +72,12 @@ impl Game {
         let range = zord.range;
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
         if distance > range as i32 {
+            return false;
+        }
+
+        // Check grace period
+        let delta_t = self.start_of_day.elapsed();
+        if delta_t.as_secs() <= GRACE_PERIOD {
             return false;
         }
 
@@ -165,7 +172,9 @@ impl Game {
 
 #[cfg(test)]
 mod tests {
-    use crate::game::{player::BASE_ACTIONS, zord::BASE_RANGE};
+    use std::time::Duration;
+
+    use crate::game::{game::GRACE_PERIOD, player::BASE_ACTIONS, zord::BASE_RANGE};
 
     use super::Game;
 
@@ -182,6 +191,7 @@ mod tests {
     fn shoot_and_kill() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        game.start_of_day = game.start_of_day.checked_sub(Duration::from_secs(GRACE_PERIOD + 1)).unwrap();
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(&p, 0, 0);
         let p = game.players.get(1).cloned().unwrap();
@@ -190,6 +200,20 @@ mod tests {
         let success = game.player_shoot(0, 0, 1, 1);
         assert!(success);
         assert_eq!(game.board.board.len(), 1);
+    }
+
+    #[test]
+    fn shoot_during_grace_period() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let p = game.players.get(1).cloned().unwrap();
+        game.create_zord(&p, 1, 1);
+        game.player_shoot(0, 0, 1, 1);
+        let success = game.player_shoot(0, 0, 1, 1);
+        assert!(!success);
+        assert_eq!(game.board.board.len(), 2);
     }
 
     #[test]
