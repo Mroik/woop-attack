@@ -10,6 +10,7 @@ use super::{
 const BASE_BOARD_SIZE: i16 = 10000;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 
+#[derive(Debug)]
 struct Game {
     players: Vec<Player>,
     board: Board,
@@ -54,6 +55,36 @@ impl Game {
         owner.spend_action();
 
         zord.zord_generate_shield()
+    }
+
+    fn donate_points(&mut self, from: &str, to: &str, amount: u16) -> bool {
+        // Target exist
+        if !self.players.iter().any(|p| p.name == to) {
+            return false;
+        }
+
+        // Source exist
+        let from_p = self.players.iter_mut().find(|p| p.name == from);
+        if from_p.is_none() {
+            return false;
+        }
+
+        // Has enough points
+        let pf = from_p.unwrap();
+        if amount > pf.points {
+            return false;
+        }
+
+        // Has enough actions
+        if pf.actions == 0 {
+            return false;
+        }
+        pf.spend_action();
+
+        pf.points -= amount;
+        let pt = self.players.iter_mut().find(|p| p.name == to).unwrap();
+        pt.points += amount;
+        true
     }
 
     fn move_zord(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> bool {
@@ -401,5 +432,65 @@ mod tests {
         let z = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
         assert_eq!(z.y, 0);
+    }
+
+    #[test]
+    fn donate_points() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        game.players
+            .iter_mut()
+            .find(|p| p.name == "mroik")
+            .unwrap()
+            .points = 100;
+        let success = game.donate_points("mroik", "fin", 30);
+        eprintln!("{:?}", game);
+        assert!(success);
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "mroik")
+                .unwrap()
+                .points,
+            70
+        );
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "fin")
+                .unwrap()
+                .points,
+            30
+        );
+    }
+
+    #[test]
+    fn donate_points_amount_too_big() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        game.players
+            .iter_mut()
+            .find(|p| p.name == "mroik")
+            .unwrap()
+            .points = 10;
+        let success = game.donate_points("mroik", "fin", 30);
+        eprintln!("{:?}", game);
+        assert!(!success);
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "mroik")
+                .unwrap()
+                .points,
+            10
+        );
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "fin")
+                .unwrap()
+                .points,
+            0
+        );
     }
 }

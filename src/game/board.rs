@@ -1,5 +1,6 @@
 use super::entity::Entity;
 
+#[derive(Debug)]
 pub struct Board {
     pub size: i16,
     pub board: Vec<Entity>,

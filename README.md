@@ -16,8 +16,8 @@ Basic actions:
     - [x] A player can use an action to move a zord one square
     - [x] A zord can only move in one of the eight adjacent square
 - Special actions:
-    - [ ] A player can use an action to donate points
-    - [ ] A player can donate any amount of points they have
+    - [x] A player can use an action to donate points
+    - [x] A player can donate any amount of points they have
     - [ ] A player can build a zord by spending 10 points and using an action
     - [ ] A player can use an action to increase their range by one
     - [ ] At the end of the day the range returns to its base value

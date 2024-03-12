@@ -1,10 +1,10 @@
 pub const BASE_ACTIONS: u8 = 5;
 
-#[derive(PartialEq, Clone)]
+#[derive(PartialEq, Clone, Debug)]
 pub struct Player {
     pub name: String,
     pub actions: u8,
-    points: u16,
+    pub points: u16,
 }
 
 impl Player {
