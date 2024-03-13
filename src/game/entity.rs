@@ -61,4 +61,11 @@ impl Entity {
             _ => false,
         }
     }
+
+    pub fn distance(&self, x: i16, y: i16) -> i16 {
+        match self {
+            Entity::Zord(z) => (z.x - x).abs().max((z.y - y).abs()),
+            Entity::Totem(t) => (t.x - x).abs().max((t.y - y).abs()),
+        }
+    }
 }

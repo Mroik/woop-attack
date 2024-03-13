@@ -9,6 +9,7 @@ use super::{
 
 const BASE_BOARD_SIZE: i16 = 10000;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
+const NEW_ZORD_COST: u16 = 10;
 
 #[derive(Debug)]
 struct Game {
@@ -240,6 +241,33 @@ impl Game {
 
         zord.zord_increase_range()
     }
+
+    fn build_zord(&mut self, player: &str, x: i16, y: i16) -> bool {
+        // Check if (x, y) is nearby another zord
+        if !self
+            .board
+            .board
+            .iter()
+            .any(|z| z.is_zord() && z.distance(x, y) <= 1 && z.get_zord().unwrap().owner == player)
+        {
+            return false;
+        }
+
+        // Check if enough actions and points
+        if self
+            .players
+            .iter()
+            .any(|p| p.name == player && (p.actions == 0 || p.points < NEW_ZORD_COST))
+        {
+            return false;
+        }
+
+        let p = self.players.iter_mut().find(|p| p.name == player).unwrap();
+        p.spend_action();
+        p.points -= NEW_ZORD_COST;
+        self.board.board.push(Entity::Zord(Zord::new(p, x, y)));
+        true
+    }
 }
 
 #[cfg(test)]
@@ -437,7 +465,6 @@ mod tests {
             .unwrap()
             .points = 100;
         let success = game.donate_points("mroik", "fin", 30);
-        eprintln!("{:?}", game);
         assert!(success);
         assert_eq!(
             game.players
@@ -467,7 +494,6 @@ mod tests {
             .unwrap()
             .points = 10;
         let success = game.donate_points("mroik", "fin", 30);
-        eprintln!("{:?}", game);
         assert!(!success);
         assert_eq!(
             game.players
@@ -485,5 +511,72 @@ mod tests {
                 .points,
             0
         );
+    }
+
+    #[test]
+    fn build_zord() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        {
+            let p = game.players.get(0).cloned().unwrap();
+            game.create_zord(&p, 0, 0);
+        }
+        game.players
+            .iter_mut()
+            .find(|p| p.name == "mroik")
+            .unwrap()
+            .points = 10;
+
+        let success = game.build_zord("mroik", 1, 1);
+        let z = game.board.board.iter().find(|z| z.is_zord() && z.is_coord(1, 1)).unwrap().get_zord().unwrap();
+        let p = game.players.get(0).unwrap();
+        assert!(success);
+        assert_eq!(p.actions, 4);
+        assert_eq!(p.points, 0);
+        assert_eq!(z.owner, "mroik");
+    }
+
+    #[test]
+    fn build_zord_out_of_range() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        {
+            let p = game.players.get(0).cloned().unwrap();
+            game.create_zord(&p, 0, 0);
+        }
+        game.players
+            .iter_mut()
+            .find(|p| p.name == "mroik")
+            .unwrap()
+            .points = 10;
+
+        let success = game.build_zord("mroik", 3, 3);
+        let p = game.players.get(0).unwrap();
+        assert!(!success);
+        assert_eq!(p.actions, 5);
+        assert_eq!(p.points, 10);
+        assert_eq!(game.board.board.iter().len(), 1);
+    }
+
+    #[test]
+    fn build_zord_not_enough_points() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        {
+            let p = game.players.get(0).cloned().unwrap();
+            game.create_zord(&p, 0, 0);
+        }
+        game.players
+            .iter_mut()
+            .find(|p| p.name == "mroik")
+            .unwrap()
+            .points = 9;
+
+        let success = game.build_zord("mroik", 1, 1);
+        let p = game.players.get(0).unwrap();
+        assert!(!success);
+        assert_eq!(p.actions, 5);
+        assert_eq!(p.points, 9);
+        assert_eq!(game.board.board.iter().len(), 1);
     }
 }
