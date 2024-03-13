@@ -235,7 +235,6 @@ impl Game {
         }
     }
 
-    // TODO Check if 29th (END OF GAME)
     fn new_day(&mut self) {
         // Set new day
         self.start_of_day = Instant::now();
