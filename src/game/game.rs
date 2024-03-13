@@ -200,6 +200,7 @@ impl Game {
         self.board.board.push(z);
     }
 
+    // TODO give out points for the totems
     fn new_day(&mut self) {
         // Set new day
         self.start_of_day = Instant::now();
