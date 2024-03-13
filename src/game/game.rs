@@ -89,13 +89,7 @@ impl Game {
 
     fn move_zord(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> bool {
         // Check if empty
-        if self
-            .board
-            .board
-            .iter()
-            .find(|e| e.is_coord(x_t, y_t))
-            .is_some()
-        {
+        if self.board.board.iter().any(|e| e.is_coord(x_t, y_t)) {
             return false;
         }
 
@@ -211,12 +205,11 @@ impl Game {
             .for_each(|player| player.actions = BASE_ACTIONS);
 
         // Remove shields and reset range
-        self.board.board.iter_mut().for_each(|entity| match entity {
-            Entity::Zord(z) => {
+        self.board.board.iter_mut().for_each(|entity| {
+            if let Entity::Zord(z) = entity {
                 z.range = BASE_RANGE;
                 z.shields = 0;
             }
-            _ => (),
         });
     }
 

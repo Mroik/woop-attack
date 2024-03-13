@@ -15,10 +15,7 @@ impl Entity {
     }
 
     pub fn is_zord(&self) -> bool {
-        match self {
-            Entity::Zord(_) => true,
-            _ => false,
-        }
+        matches!(self, Entity::Zord(_))
     }
 
     pub fn get_zord(&self) -> Option<&Zord> {
