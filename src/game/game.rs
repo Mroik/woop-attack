@@ -1,9 +1,10 @@
-use std::time::Instant;
+use std::{collections::HashMap, time::Instant};
 
 use super::{
     board::Board,
     entity::Entity,
     player::{Player, BASE_ACTIONS},
+    totem::Totem,
     zord::{Zord, BASE_RANGE},
 };
 
@@ -11,6 +12,8 @@ const BASE_BOARD_SIZE: i16 = 10000;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 const NEW_ZORD_COST: u16 = 10;
 const KILL_REWARD: u16 = 3;
+const TOTEM_AURA: u16 = 3;
+const TOTEM_REWARD: u16 = 50;
 
 #[derive(Debug)]
 struct Game {
@@ -200,7 +203,39 @@ impl Game {
         self.board.board.push(z);
     }
 
-    // TODO give out points for the totems
+    fn give_out_totem_points(&mut self) {
+        let totems = self.board.board.iter().filter(|t| !t.is_zord()).map(|t| {
+            let tot = t.get_totem().unwrap();
+            (tot.x, tot.y)
+        });
+
+        for (x_t, y_t) in totems {
+            let mut in_bounds = HashMap::new();
+            let mut total = 0;
+            self.board
+                .board
+                .iter()
+                .filter(|z| z.is_zord())
+                .map(|z| z.get_zord().unwrap())
+                .for_each(|z| {
+                    if (x_t - z.x).abs().max((y_t - z.y).abs()) <= TOTEM_AURA as i16 {
+                        match in_bounds.get(z.owner.as_str()) {
+                            None => in_bounds.insert(z.owner.clone(), 1),
+                            Some(v) => in_bounds.insert(z.owner.clone(), v + 1),
+                        };
+                        total += 1;
+                    }
+                });
+
+            for player in in_bounds.keys() {
+                let many = in_bounds.get(player).unwrap();
+                let p = self.players.iter_mut().find(|p| p.name == *player).unwrap();
+                p.points += TOTEM_REWARD / total * many;
+            }
+        }
+    }
+
+    // TODO Check if 29th (END OF GAME)
     fn new_day(&mut self) {
         // Set new day
         self.start_of_day = Instant::now();
@@ -218,6 +253,8 @@ impl Game {
                 z.shields = 0;
             }
         });
+
+        self.give_out_totem_points();
     }
 
     fn increase_range(&mut self, x: i16, y: i16) -> bool {
@@ -272,6 +309,16 @@ impl Game {
         p.spend_action();
         p.points -= NEW_ZORD_COST;
         self.board.board.push(Entity::Zord(Zord::new(p, x, y)));
+        true
+    }
+
+    fn create_totem(&mut self, x: i16, y: i16) -> bool {
+        // Check if cell is empty
+        if self.board.board.iter().any(|e| e.is_coord(x, y)) {
+            return false;
+        }
+
+        self.board.board.push(Entity::Totem(Totem::new(x, y)));
         true
     }
 }
@@ -594,5 +641,69 @@ mod tests {
         assert_eq!(p.actions, 5);
         assert_eq!(p.points, 9);
         assert_eq!(game.board.board.iter().len(), 1);
+    }
+
+    #[test]
+    fn give_out_points() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        game.create_totem(1, 1);
+        game.give_out_totem_points();
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "mroik")
+                .unwrap()
+                .points,
+            50
+        );
+    }
+
+    #[test]
+    fn give_out_points_double() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        let p = game.players.get(1).cloned().unwrap();
+        game.create_zord(&p, 0, 1);
+        game.create_totem(2, 2);
+        game.give_out_totem_points();
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "mroik")
+                .unwrap()
+                .points,
+            25
+        );
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "fin")
+                .unwrap()
+                .points,
+            25
+        );
+    }
+
+    #[test]
+    fn give_out_out_of_range() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
+        game.create_totem(100, 100);
+        game.give_out_totem_points();
+        assert_eq!(
+            game.players
+                .iter()
+                .find(|p| p.name == "mroik")
+                .unwrap()
+                .points,
+            0
+        );
     }
 }

@@ -68,4 +68,11 @@ impl Entity {
             Entity::Totem(t) => (t.x - x).abs().max((t.y - y).abs()),
         }
     }
+
+    pub fn get_totem(&self) -> Option<&Totem> {
+        match self {
+            Entity::Totem(t) => Some(t),
+            _ => None,
+        }
+    }
 }
