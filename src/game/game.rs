@@ -10,6 +10,7 @@ use super::{
 const BASE_BOARD_SIZE: i16 = 10000;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 const NEW_ZORD_COST: u16 = 10;
+const KILL_REWARD: u16 = 3;
 
 #[derive(Debug)]
 struct Game {
@@ -167,12 +168,16 @@ impl Game {
         owner.spend_action();
 
         // Shoot and cleanup
-        self.board
+        if self
+            .board
             .board
             .iter_mut()
             .find(|entity| entity.is_coord(x_t, y_t) && entity.is_zord())
             .unwrap()
-            .zord_hit();
+            .zord_hit()
+        {
+            owner.points += KILL_REWARD;
+        }
         self.clear_dead();
 
         true
@@ -301,8 +306,10 @@ mod tests {
         game.create_zord(&p, 1, 1);
         game.player_shoot(0, 0, 1, 1);
         let success = game.player_shoot(0, 0, 1, 1);
+        let p = game.players.get(0).cloned().unwrap();
         assert!(success);
         assert_eq!(game.board.board.len(), 1);
+        assert_eq!(p.points, 3);
     }
 
     #[test]
@@ -317,6 +324,7 @@ mod tests {
         let success = game.player_shoot(0, 0, 1, 1);
         assert!(!success);
         assert_eq!(game.board.board.len(), 2);
+        assert_eq!(p.points, 0);
     }
 
     #[test]
@@ -329,6 +337,7 @@ mod tests {
         game.create_zord(&p, 10, 10);
         let success = game.player_shoot(0, 0, 10, 10);
         assert!(!success);
+        assert_eq!(p.points, 0);
     }
 
     #[test]
@@ -341,6 +350,7 @@ mod tests {
         game.create_zord(&p, 1, 1);
         let success = game.player_shoot(2, 2, 0, 0);
         assert!(!success);
+        assert_eq!(p.points, 0);
     }
 
     #[test]
@@ -528,7 +538,14 @@ mod tests {
             .points = 10;
 
         let success = game.build_zord("mroik", 1, 1);
-        let z = game.board.board.iter().find(|z| z.is_zord() && z.is_coord(1, 1)).unwrap().get_zord().unwrap();
+        let z = game
+            .board
+            .board
+            .iter()
+            .find(|z| z.is_zord() && z.is_coord(1, 1))
+            .unwrap()
+            .get_zord()
+            .unwrap();
         let p = game.players.get(0).unwrap();
         assert!(success);
         assert_eq!(p.actions, 4);
@@ -562,10 +579,8 @@ mod tests {
     fn build_zord_not_enough_points() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        {
-            let p = game.players.get(0).cloned().unwrap();
-            game.create_zord(&p, 0, 0);
-        }
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(&p, 0, 0);
         game.players
             .iter_mut()
             .find(|p| p.name == "mroik")
