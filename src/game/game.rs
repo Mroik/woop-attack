@@ -261,7 +261,7 @@ impl Game {
 
         let to_spawn = players.iter().filter(|(_, many)| **many == 0);
         for (player, _) in to_spawn {
-            let (x, y) = self.calculate_respawn_coordinates(player);
+            let (x, y) = self.calculate_respawn_coordinates();
             self.create_zord(player.as_str(), x, y);
         }
     }
@@ -369,7 +369,7 @@ impl Game {
     }
 
     /// This is very slow for bigger boards
-    fn calculate_respawn_coordinates(&self, player: &str) -> (i16, i16) {
+    fn calculate_respawn_coordinates(&self) -> (i16, i16) {
         let mut ris = (0, 0);
         let mut r_dis = 0;
         if self.board.board.iter().filter(|z| z.is_zord()).count() == 0 {

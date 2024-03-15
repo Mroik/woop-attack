@@ -1,5 +1,3 @@
-use super::player::Player;
-
 pub const BASE_RANGE: u8 = 5;
 const BASE_HP: u8 = 2;
 
