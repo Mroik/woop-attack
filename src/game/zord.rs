@@ -49,13 +49,10 @@ impl Zord {
 
 #[cfg(test)]
 mod tests {
-    use crate::game::player::Player;
-
     use super::Zord;
 
     #[test]
     fn survive_hit() {
-        let player = Player::new("ciao");
         let mut z = Zord::new("ciao", 0, 0);
         assert!(!z.hit());
         assert_eq!(z.hp, 1);
@@ -63,7 +60,6 @@ mod tests {
 
     #[test]
     fn die_on_hit() {
-        let player = Player::new("ciao");
         let mut z = Zord::new("ciao", 0, 0);
         z.hit();
         assert!(z.hit());
@@ -72,7 +68,6 @@ mod tests {
 
     #[test]
     fn increase_range() {
-        let player = Player::new("ciao");
         let mut z = Zord::new("ciao", 0, 0);
         z.increase_range();
         assert_eq!(z.range, 6);
@@ -80,7 +75,6 @@ mod tests {
 
     #[test]
     fn generate_shield() {
-        let player = Player::new("ciao");
         let mut z = Zord::new("ciao", 0, 0);
         z.generate_shield();
         assert_eq!(z.shields, 1);
