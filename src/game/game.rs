@@ -243,7 +243,6 @@ impl Game {
         }
     }
 
-    // TODO Write test
     fn respawn_players(&mut self) {
         let mut players = HashMap::new();
         for player in self.players.iter() {
@@ -267,7 +266,6 @@ impl Game {
         }
     }
 
-    // TODO Handle respawn
     fn new_day(&mut self) {
         // Set new day
         self.start_of_day = Instant::now();
@@ -287,6 +285,7 @@ impl Game {
         });
 
         self.give_out_totem_points();
+        self.respawn_players();
     }
 
     fn increase_range(&mut self, x: i16, y: i16) -> Result<(), WoopError> {
@@ -392,14 +391,14 @@ impl Game {
                 let distance = zords_on_board
                     .iter()
                     .map(|(x, y)| ((x_f - x).abs().max((y_f - y).abs()), x, y))
-                    .min().unwrap();
+                    .min()
+                    .unwrap();
                 if r_dis < distance.0 {
                     ris = (x_f, y_f);
                     r_dis = distance.0;
                 }
             }
         }
-
         ris
     }
 }
@@ -538,6 +537,7 @@ mod tests {
         assert_eq!(game.players.get(0).unwrap().actions, BASE_ACTIONS);
         assert_eq!(zord.range, BASE_RANGE);
         assert_eq!(zord.shields, 0);
+        assert_eq!(game.board.board.len(), 3);
     }
 
     #[test]
