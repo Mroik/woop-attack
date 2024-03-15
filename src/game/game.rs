@@ -13,7 +13,7 @@ const BASE_BOARD_SIZE: i16 = 70;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 const NEW_ZORD_COST: u16 = 10;
 const KILL_REWARD: u16 = 3;
-const TOTEM_AURA: u16 = 3;
+const TOTEM_AURA: u16 = 2;
 const TOTEM_REWARD: u16 = 50;
 
 #[derive(Debug)]
