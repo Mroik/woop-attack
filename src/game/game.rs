@@ -25,7 +25,7 @@ pub struct Game {
 }
 
 impl Game {
-    fn new(names: Vec<String>) -> Self {
+    pub fn new(names: Vec<String>) -> Self {
         let players = names.iter().map(|name| Player::new(name)).collect();
         Game {
             players,
@@ -35,7 +35,7 @@ impl Game {
         }
     }
 
-    fn generate_shield(&mut self, x_f: i16, y_f: i16) -> Result<(), WoopError> {
+    pub fn generate_shield(&mut self, x_f: i16, y_f: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = self
             .board
@@ -67,7 +67,7 @@ impl Game {
         }
     }
 
-    fn donate_points(&mut self, from: &str, to: &str, amount: u16) -> Result<(), WoopError> {
+    pub fn donate_points(&mut self, from: &str, to: &str, amount: u16) -> Result<(), WoopError> {
         // Target exist
         if !self.players.iter().any(|p| p.name == to) {
             return WoopError::player_not_found(to);
@@ -97,7 +97,7 @@ impl Game {
         Ok(())
     }
 
-    fn move_zord(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> Result<(), WoopError> {
+    pub fn move_zord(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> Result<(), WoopError> {
         // Check if empty
         if self.board.board.iter().any(|e| e.is_coord(x_t, y_t)) {
             return WoopError::cell_occupied(x_t, y_t);
@@ -143,7 +143,7 @@ impl Game {
         }
     }
 
-    fn player_shoot(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> Result<(), WoopError> {
+    pub fn player_shoot(&mut self, player: &str, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = self
             .board
@@ -154,8 +154,14 @@ impl Game {
             return WoopError::zord_not_found(x_f, y_f);
         }
 
-        // Check if within range
         let zord = zord.unwrap().get_zord().unwrap();
+
+        // Check if own zord
+        if zord.owner != player {
+            return WoopError::not_owned(x_f, y_f);
+        }
+
+        // Check if within range
         let range = zord.range;
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
         if distance > range as i16 {
@@ -266,7 +272,7 @@ impl Game {
         }
     }
 
-    fn new_day(&mut self) {
+    pub fn new_day(&mut self) {
         // Set new day
         self.start_of_day = Instant::now();
         self.day += 1;
@@ -288,7 +294,7 @@ impl Game {
         self.respawn_players();
     }
 
-    fn increase_range(&mut self, x: i16, y: i16) -> Result<(), WoopError> {
+    pub fn increase_range(&mut self, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = self
             .board
@@ -319,7 +325,7 @@ impl Game {
         }
     }
 
-    fn build_zord(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
+    pub fn build_zord(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if (x, y) is nearby another zord
         if !self
             .board
@@ -433,8 +439,8 @@ mod tests {
         game.create_zord(p.name.as_str(), 0, 0);
         let p = game.players.get(1).cloned().unwrap();
         game.create_zord(p.name.as_str(), 1, 1);
-        let _ = game.player_shoot(0, 0, 1, 1);
-        let success = game.player_shoot(0, 0, 1, 1);
+        let _ = game.player_shoot("mroik", 0, 0, 1, 1);
+        let success = game.player_shoot("mroik", 0, 0, 1, 1);
         let p = game.players.get(0).cloned().unwrap();
         assert!(success.is_ok());
         assert_eq!(game.board.board.len(), 1);
@@ -449,8 +455,8 @@ mod tests {
         game.create_zord(p.name.as_str(), 0, 0);
         let p = game.players.get(1).cloned().unwrap();
         game.create_zord(p.name.as_str(), 1, 1);
-        let _ = game.player_shoot(0, 0, 1, 1);
-        let success = game.player_shoot(0, 0, 1, 1);
+        let _ = game.player_shoot("mroik", 0, 0, 1, 1);
+        let success = game.player_shoot("mroik", 0, 0, 1, 1);
         assert!(success.is_err());
         assert_eq!(game.board.board.len(), 2);
         assert_eq!(p.points, 0);
@@ -464,7 +470,7 @@ mod tests {
         game.create_zord(p.name.as_str(), 0, 0);
         let p = game.players.get(1).cloned().unwrap();
         game.create_zord(p.name.as_str(), 10, 10);
-        let success = game.player_shoot(0, 0, 10, 10);
+        let success = game.player_shoot("mroik", 0, 0, 10, 10);
         assert!(success.is_err());
         assert_eq!(p.points, 0);
     }
@@ -477,7 +483,20 @@ mod tests {
         game.create_zord(p.name.as_str(), 0, 0);
         let p = game.players.get(1).cloned().unwrap();
         game.create_zord(p.name.as_str(), 1, 1);
-        let success = game.player_shoot(2, 2, 0, 0);
+        let success = game.player_shoot("mroik", 2, 2, 0, 0);
+        assert!(success.is_err());
+        assert_eq!(p.points, 0);
+    }
+
+    #[test]
+    fn shoot_but_not_owned() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        let p = game.players.get(0).cloned().unwrap();
+        game.create_zord(p.name.as_str(), 0, 0);
+        let p = game.players.get(1).cloned().unwrap();
+        game.create_zord(p.name.as_str(), 1, 1);
+        let success = game.player_shoot("fin", 0, 0, 1, 1);
         assert!(success.is_err());
         assert_eq!(p.points, 0);
     }

@@ -3,7 +3,9 @@ use std::{
     fmt::{self, Display, Formatter},
 };
 
-#[derive(Debug)]
+use serde::Serialize;
+
+#[derive(Debug, Serialize)]
 pub enum WoopError {
     OutOfActions,
     ZordNotFound(i16, i16),
@@ -15,6 +17,7 @@ pub enum WoopError {
     PlayerNotFound(String),
     WithinGracePeriod,
     NoZordNearby(i16, i16),
+    NotOwned(i16, i16),
 }
 
 impl WoopError {
@@ -57,6 +60,10 @@ impl WoopError {
     pub fn no_zord_nearby(x: i16, y: i16) -> Result<(), WoopError> {
         Err(WoopError::NoZordNearby(x, y))
     }
+
+    pub fn not_owned(x: i16, y: i16) -> Result<(), WoopError> {
+        Err(WoopError::NotOwned(x, y))
+    }
 }
 
 impl Error for WoopError {}
@@ -80,6 +87,7 @@ impl Display for WoopError {
             Self::PlayerNotFound(player) => write!(f, "Couldn't find player named {}", player),
             Self::WithinGracePeriod => write!(f, "You tried shooting within the grace period"),
             Self::NoZordNearby(x, y) => write!(f, "There's no zord nearby ({}, {})", x, y),
+            Self::NotOwned(x, y) => write!(f, "You don't own the zord in ({}, {})", x, y),
         }
     }
 }
