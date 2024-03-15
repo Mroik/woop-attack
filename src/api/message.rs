@@ -1,15 +1,11 @@
-use serde::Serialize;
+use serde::{Deserialize, Serialize};
 
-use crate::game::{entity::Entity, error::WoopError, player::Player};
+use crate::game::{entity::Entity, player::Player};
 
-pub enum GameMessage {
-    Request(Request),
-    Reply(Result<Reply, WoopError>),
-}
-
+#[derive(Deserialize, Clone)]
 pub enum Request {
     // Actions
-    Shoot(String, (i16, i16)),
+    Shoot(String, (i16, i16), (i16, i16)),
     Move(String, (i16, i16), (i16, i16)),
     IncreaseRange(String, (i16, i16)),
     GenerateShield(String, (i16, i16)),
@@ -27,4 +23,5 @@ pub enum Reply {
     Map(Vec<Entity>),
     Leaderboard(Vec<Player>),
     Day(u8),
+    Ok,
 }

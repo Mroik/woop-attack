@@ -143,7 +143,14 @@ impl Game {
         }
     }
 
-    pub fn player_shoot(&mut self, player: &str, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> Result<(), WoopError> {
+    pub fn player_shoot(
+        &mut self,
+        player: &str,
+        x_f: i16,
+        y_f: i16,
+        x_t: i16,
+        y_t: i16,
+    ) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = self
             .board
