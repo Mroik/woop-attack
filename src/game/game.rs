@@ -368,6 +368,7 @@ impl Game {
         Ok(())
     }
 
+    /// This is very slow for bigger boards
     fn calculate_respawn_coordinates(&self, player: &str) -> (i16, i16) {
         let mut ris = (0, 0);
         let mut r_dis = 0;
