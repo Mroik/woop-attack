@@ -1,7 +1,7 @@
 mod board;
-mod entity;
-mod error;
-mod game;
-mod player;
+pub mod entity;
+pub mod error;
+pub mod game;
+pub mod player;
 mod totem;
 mod zord;

@@ -1,7 +1,9 @@
+use serde::Serialize;
+
 pub const BASE_RANGE: u8 = 5;
 const BASE_HP: u8 = 2;
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub struct Zord {
     pub x: i16,
     pub y: i16,

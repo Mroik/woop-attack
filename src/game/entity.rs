@@ -1,6 +1,8 @@
+use serde::Serialize;
+
 use super::{totem::Totem, zord::Zord};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize)]
 pub enum Entity {
     Zord(Zord),
     Totem(Totem),

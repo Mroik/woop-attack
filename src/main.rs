@@ -1,3 +1,4 @@
+mod api;
 mod game;
 
 use serde::{Deserialize, Serialize};

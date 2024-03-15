@@ -1,6 +1,8 @@
+use serde::Serialize;
+
 pub const BASE_ACTIONS: u8 = 5;
 
-#[derive(PartialEq, Clone, Debug)]
+#[derive(PartialEq, Clone, Debug, Serialize)]
 pub struct Player {
     pub name: String,
     pub actions: u8,

@@ -17,7 +17,7 @@ const TOTEM_AURA: u16 = 2;
 const TOTEM_REWARD: u16 = 50;
 
 #[derive(Debug)]
-struct Game {
+pub struct Game {
     players: Vec<Player>,
     board: Board,
     start_of_day: Instant,
