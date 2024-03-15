@@ -12,7 +12,7 @@ enum ApiReply {
     Reply(Reply),
 }
 
-async fn start_api(game: Mutex<Game>) {
+pub async fn start_api(game: Mutex<Game>) {
     let shoot_game = Arc::new(game);
     let move_game = shoot_game.clone();
 
