@@ -9,7 +9,7 @@ use super::{
     zord::{Zord, BASE_RANGE},
 };
 
-const BASE_BOARD_SIZE: i16 = 10000;
+const BASE_BOARD_SIZE: i16 = 70;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 const NEW_ZORD_COST: u16 = 10;
 const KILL_REWARD: u16 = 3;
@@ -260,9 +260,7 @@ impl Game {
                 players.insert(z.owner.clone(), v + 1);
             });
 
-        let to_spawn = players
-            .iter()
-            .filter(|(_, many)| **many > 0);
+        let to_spawn = players.iter().filter(|(_, many)| **many == 0);
         for (player, _) in to_spawn {
             let (x, y) = self.calculate_respawn_coordinates(player);
             self.create_zord(player.as_str(), x, y);
@@ -355,7 +353,9 @@ impl Game {
         let p = self.players.iter_mut().find(|p| p.name == player).unwrap();
         p.spend_action();
         p.points -= NEW_ZORD_COST;
-        self.board.board.push(Entity::Zord(Zord::new(p.name.as_str(), x, y)));
+        self.board
+            .board
+            .push(Entity::Zord(Zord::new(p.name.as_str(), x, y)));
         Ok(())
     }
 
@@ -370,7 +370,37 @@ impl Game {
     }
 
     fn calculate_respawn_coordinates(&self, player: &str) -> (i16, i16) {
-        todo!()
+        let mut ris = (0, 0);
+        let mut r_dis = 0;
+        if self.board.board.iter().filter(|z| z.is_zord()).count() == 0 {
+            return ris;
+        }
+
+        let zords_on_board: Vec<(i16, i16)> = self
+            .board
+            .board
+            .iter()
+            .filter(|z| z.is_zord())
+            .map(|z| {
+                let zord = z.get_zord().unwrap();
+                (zord.x, zord.y)
+            })
+            .collect();
+
+        for y_f in 0..BASE_BOARD_SIZE {
+            for x_f in 0..BASE_BOARD_SIZE {
+                let distance = zords_on_board
+                    .iter()
+                    .map(|(x, y)| ((x_f - x).abs().max((y_f - y).abs()), x, y))
+                    .min().unwrap();
+                if r_dis < distance.0 {
+                    ris = (x_f, y_f);
+                    r_dis = distance.0;
+                }
+            }
+        }
+
+        ris
     }
 }
 
@@ -752,5 +782,13 @@ mod tests {
                 .points,
             0
         );
+    }
+
+    #[test]
+    fn respawn() {
+        let names = vec!["mroik", "fin", "warden"];
+        let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
+        game.respawn_players();
+        assert_eq!(game.board.board.len(), 3);
     }
 }
