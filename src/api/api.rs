@@ -12,12 +12,14 @@ enum ApiReply {
     Reply(Reply),
 }
 
-async fn start_api(game: Game) {
-    let game = Arc::new(Mutex::new(game));
-    let shoot = warp::path("shoot")
+async fn start_api(game: Mutex<Game>) {
+    let shoot_game = Arc::new(game);
+    let move_game = shoot_game.clone();
+
+    let shoot_action = warp::path("shoot")
         .and(warp::body::json())
         .map(move |req: Request| {
-            let mut game = game.lock().unwrap();
+            let mut game = shoot_game.lock().unwrap();
             match req {
                 Request::Shoot(player, (x_f, y_f), (x_t, y_t)) => {
                     match game.player_shoot(player.as_str(), x_f, y_f, x_t, y_t) {
@@ -29,6 +31,21 @@ async fn start_api(game: Game) {
             }
         });
 
-    let routes = warp::post().and(shoot);
+    let move_action = warp::path("move")
+        .and(warp::body::json())
+        .map(move |req: Request| {
+            let mut game = move_game.lock().unwrap();
+            match req {
+                Request::Move(player, (x_f, y_f), (x_t, y_t)) => {
+                    match game.move_zord(player.as_str(), x_f, y_f, x_t, y_t) {
+                        Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                    }
+                }
+                _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+            }
+        });
+
+    let routes = warp::post().and(shoot_action.or(move_action));
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
 }

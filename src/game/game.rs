@@ -97,7 +97,14 @@ impl Game {
         Ok(())
     }
 
-    pub fn move_zord(&mut self, x_f: i16, y_f: i16, x_t: i16, y_t: i16) -> Result<(), WoopError> {
+    pub fn move_zord(
+        &mut self,
+        player: &str,
+        x_f: i16,
+        y_f: i16,
+        x_t: i16,
+        y_t: i16,
+    ) -> Result<(), WoopError> {
         // Check if empty
         if self.board.board.iter().any(|e| e.is_coord(x_t, y_t)) {
             return WoopError::cell_occupied(x_t, y_t);
@@ -113,6 +120,11 @@ impl Game {
             return WoopError::zord_not_found(x_f, y_f);
         }
         let zord = zord.unwrap();
+
+        // Check if own zord
+        if zord.get_zord().unwrap().owner.as_str() != player {
+            return WoopError::not_owned(x_f, y_f);
+        }
 
         // Check if within range
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
@@ -571,9 +583,8 @@ mod tests {
     fn move_zord() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let success = game.move_zord(0, 0, 1, 1);
+        game.create_zord("mroik", 0, 0);
+        let success = game.move_zord("mroik", 0, 0, 1, 1);
         assert!(success.is_ok());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 1);
@@ -586,7 +597,7 @@ mod tests {
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
-        let success = game.move_zord(0, 0, -1, -1);
+        let success = game.move_zord("mroik", 0, 0, -1, -1);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
@@ -599,7 +610,7 @@ mod tests {
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
-        let success = game.move_zord(0, 0, 2, 2);
+        let success = game.move_zord("mroik", 0, 0, 2, 2);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
@@ -614,7 +625,7 @@ mod tests {
         game.create_zord(p.name.as_str(), 0, 0);
         let p = game.players.get(1).cloned().unwrap();
         game.create_zord(p.name.as_str(), 1, 1);
-        let success = game.move_zord(0, 0, 1, 1);
+        let success = game.move_zord("mroik", 0, 0, 1, 1);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
