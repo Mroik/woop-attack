@@ -318,7 +318,7 @@ impl Game {
         self.respawn_players();
     }
 
-    pub fn increase_range(&mut self, x: i16, y: i16) -> Result<(), WoopError> {
+    pub fn increase_range(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = self
             .board
@@ -330,6 +330,11 @@ impl Game {
         }
 
         let zord = zord.unwrap();
+
+        // Check if own zord
+        if zord.get_zord().unwrap().owner.as_str() != player {
+            return WoopError::not_owned(x, y);
+        }
 
         // Check if enough actions
         let name = zord.get_zord().unwrap().owner.as_str();
@@ -554,9 +559,8 @@ mod tests {
     fn increase_range() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let _ = game.increase_range(0, 0);
+        game.create_zord("mroik", 0, 0);
+        let _ = game.increase_range("mroik", 0, 0);
         assert_eq!(
             game.board.board.first().unwrap().get_zord().unwrap().range,
             6
@@ -571,7 +575,7 @@ mod tests {
         game.create_zord("mroik", 0, 0);
         game.new_day();
         let _ = game.generate_shield("mroik", 0, 0);
-        let _ = game.increase_range(0, 0);
+        let _ = game.increase_range("mroik", 0, 0);
         game.new_day();
         let zord = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(game.day, 2);
