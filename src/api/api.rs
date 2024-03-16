@@ -15,6 +15,7 @@ enum ApiReply {
 pub async fn start_api(game: Mutex<Game>) {
     let shoot_game = Arc::new(game);
     let move_game = shoot_game.clone();
+    let shield_game = shoot_game.clone();
 
     let shoot_action = warp::path("shoot")
         .and(warp::body::json())
@@ -46,6 +47,21 @@ pub async fn start_api(game: Mutex<Game>) {
             }
         });
 
-    let routes = warp::post().and(shoot_action.or(move_action));
+    let shield_action = warp::path("shield")
+        .and(warp::body::json())
+        .map(move |req: Request| {
+            let mut game = shield_game.lock().unwrap();
+            match req {
+                Request::GenerateShield(player, (x, y)) => {
+                    match game.generate_shield(player.as_str(), x, y) {
+                        Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                    }
+                }
+                _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+            }
+        });
+
+    let routes = warp::post().and(shoot_action.or(move_action).or(shield_action));
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
 }

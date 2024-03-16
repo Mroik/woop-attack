@@ -35,7 +35,7 @@ impl Game {
         }
     }
 
-    pub fn generate_shield(&mut self, x_f: i16, y_f: i16) -> Result<(), WoopError> {
+    pub fn generate_shield(&mut self, player: &str, x_f: i16, y_f: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = self
             .board
@@ -47,6 +47,11 @@ impl Game {
         }
 
         let zord = zord.unwrap();
+
+        // Check if own zord
+        if zord.get_zord().unwrap().owner.as_str() != player {
+            return WoopError::not_owned(x_f, y_f);
+        }
 
         // Check if enough actions
         let name = zord.get_zord().unwrap().owner.as_str();
@@ -524,9 +529,8 @@ mod tests {
     fn generate_shield() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let success = game.generate_shield(0, 0);
+        game.create_zord("mroik", 0, 0);
+        let success = game.generate_shield("mroik", 0, 0);
         let zord = game.board.board.first().unwrap().get_zord().unwrap();
         assert!(success.is_ok());
         assert_eq!(zord.shields, 1);
@@ -536,12 +540,11 @@ mod tests {
     fn generate_shield_no_actions() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
+        game.create_zord("mroik", 0, 0);
         for _ in 0..5 {
-            let _ = game.generate_shield(0, 0);
+            let _ = game.generate_shield("mroik", 0, 0);
         }
-        let success = game.generate_shield(0, 0);
+        let success = game.generate_shield("mroik", 0, 0);
         let zord = game.board.board.first().unwrap().get_zord().unwrap();
         assert!(success.is_err());
         assert_eq!(zord.shields, 5);
@@ -565,10 +568,9 @@ mod tests {
     fn new_day() {
         let names = vec!["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
+        game.create_zord("mroik", 0, 0);
         game.new_day();
-        let _ = game.generate_shield(0, 0);
+        let _ = game.generate_shield("mroik", 0, 0);
         let _ = game.increase_range(0, 0);
         game.new_day();
         let zord = game.board.board.first().unwrap().get_zord().unwrap();
