@@ -1,4 +1,4 @@
-use crate::game::{entity::Entity, error::WoopError, player::Player};
+use crate::game::{entity::Entity, player::Player};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
