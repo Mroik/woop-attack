@@ -16,12 +16,14 @@ pub async fn start_api(game: Mutex<Game>) {
         .map(move |req: Request| {
             let mut game = shoot_game.lock().unwrap();
             match req {
-                Request::Shoot(player, (x_f, y_f), (x_t, y_t)) => {
-                    match game.player_shoot(player.as_str(), x_f, y_f, x_t, y_t) {
-                        Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
-                    }
-                }
+                Request::Shoot {
+                    player,
+                    from: (x_f, y_f),
+                    to: (x_t, y_t),
+                } => match game.player_shoot(player.as_str(), x_f, y_f, x_t, y_t) {
+                    Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
+                    Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                },
                 _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
             }
         });
@@ -31,12 +33,14 @@ pub async fn start_api(game: Mutex<Game>) {
         .map(move |req: Request| {
             let mut game = move_game.lock().unwrap();
             match req {
-                Request::Move(player, (x_f, y_f), (x_t, y_t)) => {
-                    match game.move_zord(player.as_str(), x_f, y_f, x_t, y_t) {
-                        Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
-                    }
-                }
+                Request::Move {
+                    player,
+                    from: (x_f, y_f),
+                    to: (x_t, y_t),
+                } => match game.move_zord(player.as_str(), x_f, y_f, x_t, y_t) {
+                    Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
+                    Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                },
                 _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
             }
         });
@@ -46,12 +50,13 @@ pub async fn start_api(game: Mutex<Game>) {
         .map(move |req: Request| {
             let mut game = shield_game.lock().unwrap();
             match req {
-                Request::GenerateShield(player, (x, y)) => {
-                    match game.generate_shield(player.as_str(), x, y) {
-                        Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
-                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
-                    }
-                }
+                Request::GenerateShield {
+                    player,
+                    coord: (x, y),
+                } => match game.generate_shield(player.as_str(), x, y) {
+                    Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+                    Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                },
                 _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
             }
         });
@@ -62,12 +67,13 @@ pub async fn start_api(game: Mutex<Game>) {
             .map(move |req: Request| {
                 let mut game = increase_game.lock().unwrap();
                 match req {
-                    Request::IncreaseRange(player, (x, y)) => {
-                        match game.increase_range(player.as_str(), x, y) {
-                            Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
-                            Err(err) => warp::reply::json(&ApiReply::Err(err)),
-                        }
-                    }
+                    Request::IncreaseRange {
+                        player,
+                        coord: (x, y),
+                    } => match game.increase_range(player.as_str(), x, y) {
+                        Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                    },
                     _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
                 }
             });
@@ -78,12 +84,14 @@ pub async fn start_api(game: Mutex<Game>) {
             .map(move |req: Request| {
                 let mut game = donate_game.lock().unwrap();
                 match req {
-                    Request::Donate(donator, receiver, amount) => {
-                        match game.donate_points(donator.as_str(), receiver.as_str(), amount) {
-                            Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
-                            Err(err) => warp::reply::json(&ApiReply::Err(err)),
-                        }
-                    }
+                    Request::Donate {
+                        donator,
+                        receiver,
+                        amount,
+                    } => match game.donate_points(donator.as_str(), receiver.as_str(), amount) {
+                        Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+                        Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                    },
                     _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
                 }
             });

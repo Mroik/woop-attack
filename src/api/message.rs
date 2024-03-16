@@ -10,12 +10,33 @@ pub enum ApiReply {
 #[derive(Deserialize, Clone)]
 pub enum Request {
     // Actions
-    Shoot(String, (i16, i16), (i16, i16)),
-    Move(String, (i16, i16), (i16, i16)),
-    IncreaseRange(String, (i16, i16)),
-    GenerateShield(String, (i16, i16)),
-    Donate(String, String, u16),
-    BuildZord(String, (i16, i16)),
+    Shoot {
+        player: String,
+        from: (i16, i16),
+        to: (i16, i16),
+    },
+    Move {
+        player: String,
+        from: (i16, i16),
+        to: (i16, i16),
+    },
+    IncreaseRange {
+        player: String,
+        coord: (i16, i16),
+    },
+    GenerateShield {
+        player: String,
+        coord: (i16, i16),
+    },
+    Donate {
+        donator: String,
+        receiver: String,
+        amount: u16,
+    },
+    BuildZord {
+        player: String,
+        coord: (i16, i16),
+    },
 
     // Other stuff
     Map,
