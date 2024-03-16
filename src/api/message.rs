@@ -3,7 +3,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 pub enum ApiReply {
-    Err(WoopError),
+    Err(String),
     Reply(Reply),
 }
 
