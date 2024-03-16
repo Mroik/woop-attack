@@ -17,6 +17,7 @@ pub async fn start_api(game: Mutex<Game>) {
     let move_game = shoot_game.clone();
     let shield_game = shoot_game.clone();
     let increase_game = shoot_game.clone();
+    let donate_game = shoot_game.clone();
 
     let shoot_action = warp::path("shoot")
         .and(warp::body::json())
@@ -79,11 +80,28 @@ pub async fn start_api(game: Mutex<Game>) {
                 }
             });
 
+    let donate_action =
+        warp::path("donate-points")
+            .and(warp::body::json())
+            .map(move |req: Request| {
+                let mut game = donate_game.lock().unwrap();
+                match req {
+                    Request::Donate(donator, receiver, amount) => {
+                        match game.donate_points(donator.as_str(), receiver.as_str(), amount) {
+                            Ok(()) => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+                            Err(err) => warp::reply::json(&ApiReply::Err(err)),
+                        }
+                    }
+                    _ => warp::reply::json(&ApiReply::Err(WoopError::Generic)),
+                }
+            });
+
     let routes = warp::post().and(
         shoot_action
             .or(move_action)
             .or(shield_action)
-            .or(increase_action),
+            .or(increase_action)
+            .or(donate_action),
     );
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
 }

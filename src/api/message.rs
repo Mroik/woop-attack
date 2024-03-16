@@ -9,7 +9,7 @@ pub enum Request {
     Move(String, (i16, i16), (i16, i16)),
     IncreaseRange(String, (i16, i16)),
     GenerateShield(String, (i16, i16)),
-    Donate(String, String),
+    Donate(String, String, u16),
     BuildZord(String, (i16, i16)),
 
     // Other stuff
