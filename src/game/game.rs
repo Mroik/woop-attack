@@ -1,5 +1,3 @@
-use std::{collections::HashMap, time::Instant};
-
 use super::{
     board::Board,
     entity::Entity,
@@ -8,6 +6,7 @@ use super::{
     totem::Totem,
     zord::{Zord, BASE_RANGE},
 };
+use std::{collections::HashMap, time::Instant};
 
 const BASE_BOARD_SIZE: i16 = 70;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;

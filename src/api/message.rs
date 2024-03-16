@@ -1,6 +1,11 @@
+use crate::game::{entity::Entity, error::WoopError, player::Player};
 use serde::{Deserialize, Serialize};
 
-use crate::game::{entity::Entity, player::Player};
+#[derive(Serialize)]
+pub enum ApiReply {
+    Err(WoopError),
+    Reply(Reply),
+}
 
 #[derive(Deserialize, Clone)]
 pub enum Request {

@@ -1,16 +1,8 @@
-use std::sync::Arc;
-
-use super::message::{Reply, Request};
+use super::message::{ApiReply, Reply, Request};
 use crate::game::{error::WoopError, game::Game};
-use serde::Serialize;
+use std::sync::Arc;
 use std::sync::Mutex;
 use warp::Filter;
-
-#[derive(Serialize)]
-enum ApiReply {
-    Err(WoopError),
-    Reply(Reply),
-}
 
 pub async fn start_api(game: Mutex<Game>) {
     let shoot_game = Arc::new(game);

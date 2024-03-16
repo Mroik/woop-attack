@@ -1,9 +1,8 @@
+use serde::Serialize;
 use std::{
     error::Error,
     fmt::{self, Display, Formatter},
 };
-
-use serde::Serialize;
 
 #[derive(Debug, Serialize)]
 pub enum WoopError {
