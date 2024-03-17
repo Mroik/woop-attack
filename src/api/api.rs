@@ -1,8 +1,18 @@
 use super::message::{ApiReply, Reply, Request};
-use crate::game::{error::WoopError, game::Game};
+use crate::game::game::Game;
+use std::convert::Infallible;
 use std::sync::Arc;
 use std::sync::Mutex;
+use warp::http::StatusCode;
+use warp::reject::Rejection;
 use warp::Filter;
+use warp::Reply as WarpReply;
+
+async fn handle_rejection(_: Rejection) -> Result<impl WarpReply, Infallible> {
+    let msg = "Incorrect interaction with the api. Check method, endpoint and JSON data";
+    let json = warp::reply::json(&ApiReply::Error(String::from(msg)));
+    Ok(warp::reply::with_status(json, StatusCode::BAD_REQUEST))
+}
 
 pub async fn start_api(game: Mutex<Game>) {
     let shoot_game = Arc::new(game);
@@ -96,12 +106,14 @@ pub async fn start_api(game: Mutex<Game>) {
                 }
             });
 
-    let routes = warp::post().and(
-        shoot_action
-            .or(move_action)
-            .or(shield_action)
-            .or(increase_action)
-            .or(donate_action),
-    );
+    let routes = warp::post()
+        .and(
+            shoot_action
+                .or(move_action)
+                .or(shield_action)
+                .or(increase_action)
+                .or(donate_action),
+        )
+        .recover(handle_rejection);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
 }
