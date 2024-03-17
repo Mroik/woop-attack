@@ -24,7 +24,7 @@ pub async fn start_api(game: Mutex<Game>) {
                     Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                     Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
-                _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
+                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
 
@@ -41,7 +41,7 @@ pub async fn start_api(game: Mutex<Game>) {
                     Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                     Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
-                _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
+                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
 
@@ -57,7 +57,7 @@ pub async fn start_api(game: Mutex<Game>) {
                     Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                     Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
-                _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
+                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
 
@@ -74,7 +74,7 @@ pub async fn start_api(game: Mutex<Game>) {
                         Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                         Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                     },
-                    _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
+                    _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
                 }
             });
 
@@ -92,7 +92,7 @@ pub async fn start_api(game: Mutex<Game>) {
                         Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                         Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                     },
-                    _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
+                    _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
                 }
             });
 
