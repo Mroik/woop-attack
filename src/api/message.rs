@@ -9,24 +9,15 @@ pub enum ApiReply {
 }
 
 #[derive(Deserialize, Clone)]
-#[serde(rename_all = "kebab-case")]
+#[serde(untagged)]
 pub enum Request {
     // Actions
-    Shoot {
+    DoubleCoord {
         player: String,
         from: (i16, i16),
         to: (i16, i16),
     },
-    Move {
-        player: String,
-        from: (i16, i16),
-        to: (i16, i16),
-    },
-    IncreaseRange {
-        player: String,
-        coord: (i16, i16),
-    },
-    GenerateShield {
+    SingleCoord {
         player: String,
         coord: (i16, i16),
     },
@@ -35,15 +26,11 @@ pub enum Request {
         receiver: String,
         amount: u16,
     },
-    BuildZord {
-        player: String,
-        coord: (i16, i16),
-    },
 
-    // Other stuff
-    Map,
-    Leaderboard,
-    Day,
+    // Data retrival
+    Info {
+        requesting: String,
+    },
 }
 
 #[derive(Serialize)]

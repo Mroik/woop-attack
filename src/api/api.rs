@@ -26,7 +26,7 @@ pub async fn start_api(game: Mutex<Game>) {
         .map(move |req: Request| {
             let mut game = shoot_game.lock().unwrap();
             match req {
-                Request::Shoot {
+                Request::DoubleCoord {
                     player,
                     from: (x_f, y_f),
                     to: (x_t, y_t),
@@ -43,7 +43,7 @@ pub async fn start_api(game: Mutex<Game>) {
         .map(move |req: Request| {
             let mut game = move_game.lock().unwrap();
             match req {
-                Request::Move {
+                Request::DoubleCoord {
                     player,
                     from: (x_f, y_f),
                     to: (x_t, y_t),
@@ -60,7 +60,7 @@ pub async fn start_api(game: Mutex<Game>) {
         .map(move |req: Request| {
             let mut game = shield_game.lock().unwrap();
             match req {
-                Request::GenerateShield {
+                Request::SingleCoord {
                     player,
                     coord: (x, y),
                 } => match game.generate_shield(player.as_str(), x, y) {
@@ -77,7 +77,7 @@ pub async fn start_api(game: Mutex<Game>) {
             .map(move |req: Request| {
                 let mut game = increase_game.lock().unwrap();
                 match req {
-                    Request::IncreaseRange {
+                    Request::SingleCoord {
                         player,
                         coord: (x, y),
                     } => match game.increase_range(player.as_str(), x, y) {
