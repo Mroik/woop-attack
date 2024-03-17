@@ -21,10 +21,10 @@ pub async fn start_api(game: Mutex<Game>) {
                     from: (x_f, y_f),
                     to: (x_t, y_t),
                 } => match game.player_shoot(player.as_str(), x_f, y_f, x_t, y_t) {
-                    Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Err(err.to_string())),
+                    Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
-                _ => warp::reply::json(&ApiReply::Err(WoopError::Generic.to_string())),
+                _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
             }
         });
 
@@ -38,10 +38,10 @@ pub async fn start_api(game: Mutex<Game>) {
                     from: (x_f, y_f),
                     to: (x_t, y_t),
                 } => match game.move_zord(player.as_str(), x_f, y_f, x_t, y_t) {
-                    Ok(_) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Err(err.to_string())),
+                    Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
-                _ => warp::reply::json(&ApiReply::Err(WoopError::Generic.to_string())),
+                _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
             }
         });
 
@@ -54,10 +54,10 @@ pub async fn start_api(game: Mutex<Game>) {
                     player,
                     coord: (x, y),
                 } => match game.generate_shield(player.as_str(), x, y) {
-                    Ok(()) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Err(err.to_string())),
+                    Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
-                _ => warp::reply::json(&ApiReply::Err(WoopError::Generic.to_string())),
+                _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
             }
         });
 
@@ -71,10 +71,10 @@ pub async fn start_api(game: Mutex<Game>) {
                         player,
                         coord: (x, y),
                     } => match game.increase_range(player.as_str(), x, y) {
-                        Ok(()) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Err(err.to_string())),
+                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                     },
-                    _ => warp::reply::json(&ApiReply::Err(WoopError::Generic.to_string())),
+                    _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
                 }
             });
 
@@ -89,10 +89,10 @@ pub async fn start_api(game: Mutex<Game>) {
                         receiver,
                         amount,
                     } => match game.donate_points(donator.as_str(), receiver.as_str(), amount) {
-                        Ok(()) => warp::reply::json(&ApiReply::Reply(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Err(err.to_string())),
+                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                     },
-                    _ => warp::reply::json(&ApiReply::Err(WoopError::Generic.to_string())),
+                    _ => warp::reply::json(&ApiReply::Error(WoopError::Generic.to_string())),
                 }
             });
 
