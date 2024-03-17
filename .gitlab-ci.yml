@@ -1,11 +1,16 @@
 stages:
-  - build
+  - correct
 
-rust-latest:
-  stage: build
+check-format:
+  stage: correct
   image: rust:latest
   script:
     - rustup component add rustfmt
     - cargo fmt --check
+
+run-tests:
+  stage: correct
+  image: rust:latest
+  script:
     - cargo build
     - cargo test
