@@ -7,7 +7,7 @@ use tzfile::Tz;
 
 #[derive(Deserialize)]
 struct RawConfig {
-    players: Vec<String>,
+    players: String,
     timezone: String,
     start_of_game: u64,
 }
@@ -24,7 +24,7 @@ impl Config {
             .expect("Couldn't read config file");
         let config: RawConfig = toml::from_str(data.as_str()).unwrap();
         Self {
-            players: config.players,
+            players: config.players.split('|').map(|s| String::from(s)).collect(),
             timezone: tzfile::Tz::named(config.timezone.as_str())
                 .expect(format!("Couldn't find timezone {}", config.timezone.as_str()).as_str()),
             start_of_game: UNIX_EPOCH + Duration::from_secs(config.start_of_game),
