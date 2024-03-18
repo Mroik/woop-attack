@@ -12,5 +12,13 @@ run-tests:
   stage: correct
   image: rust:latest
   script:
+    - rustup component add llvm-tools-preview
+    - cargo install cargo-llvm-cov
     - cargo build
-    - cargo test
+    - cargo llvm-cov test --html
+    - cargo llvm-cov report --cobertura --output-path target/llvm-cov/html/coverage/coverage.xml
+  artifacts:
+    reports:
+      coverage_report:
+        coverage_format: cobertura
+        path: target/llvm-cov/html/coverage/coverage.xml
