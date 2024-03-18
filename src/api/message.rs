@@ -37,7 +37,7 @@ pub enum Request {
 #[serde(rename_all = "lowercase")]
 pub enum Reply<'a> {
     Map(&'a Vec<Entity>),
-    Leaderboard(Vec<Player>),
+    Leaderboard(&'a Vec<Player>),
     Day(u8),
     Ok,
 }

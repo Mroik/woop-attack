@@ -22,6 +22,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
     let donate_game = game.clone();
     let build_game = game.clone();
     let map_game = game.clone();
+    let leaderboard_game = game.clone();
 
     let shoot_action = warp::path("shoot")
         .and(warp::body::json())
@@ -136,6 +137,19 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             }
         });
 
+    let leaderboard_action =
+        warp::path("leaderboard")
+            .and(warp::body::json())
+            .map(move |req: Request| {
+                let game = leaderboard_game.lock().unwrap();
+                match req {
+                    Request::Info { requesting } if requesting.as_str() == "leaderboard" => {
+                        warp::reply::json(&ApiReply::Data(Reply::Leaderboard(&game.players)))
+                    }
+                    _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+                }
+            });
+
     let routes = warp::post()
         .and(
             shoot_action
@@ -144,7 +158,8 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 .or(increase_action)
                 .or(donate_action)
                 .or(build_action)
-                .or(map_action),
+                .or(map_action)
+                .or(leaderboard_action),
         )
         .recover(handle_rejection);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
