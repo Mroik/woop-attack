@@ -208,18 +208,33 @@ impl Game {
         }
         owner.spend_action();
 
-        // Shoot and cleanup
-        if self
+        let target = self
             .board
             .board
             .iter_mut()
             .find(|entity| entity.is_coord(x_t, y_t) && entity.is_zord())
-            .unwrap()
-            .zord_hit()
-        {
+            .unwrap();
+
+        // Shoot and cleanup
+        let mut t_name = String::new();
+        if target.zord_hit() {
             owner.points += KILL_REWARD;
+            t_name = target.get_zord().unwrap().owner.clone();
         }
         self.clear_dead();
+
+        let has_zords = self
+            .board
+            .board
+            .iter()
+            .filter(|z| z.is_zord() && z.get_zord().unwrap().owner == t_name)
+            .count()
+            > 0;
+        if !t_name.is_empty() && !has_zords {
+            let t_player = self.players.iter_mut().find(|p| p.name == t_name).unwrap();
+            t_player.points = t_player.points * 2 / 3;
+        }
+
         Ok(())
     }
 
@@ -463,16 +478,21 @@ mod tests {
             .start_of_day
             .checked_sub(Duration::from_secs(GRACE_PERIOD + 1))
             .unwrap();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 1, 1);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 1, 1);
+        game.players
+            .iter_mut()
+            .find(|p| p.name.as_str() == "fin")
+            .unwrap()
+            .points = 100;
         let _ = game.player_shoot("mroik", 0, 0, 1, 1);
         let success = game.player_shoot("mroik", 0, 0, 1, 1);
-        let p = game.players.get(0).cloned().unwrap();
+        let points = game.players.get(0).unwrap().points;
+        let t_points = game.players.get(1).unwrap().points;
         assert!(success.is_ok());
         assert_eq!(game.board.board.len(), 1);
-        assert_eq!(p.points, 3);
+        assert_eq!(points, 3);
+        assert_eq!(t_points, 100 * 2 / 3);
     }
 
     #[test]
