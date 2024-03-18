@@ -3,6 +3,7 @@ use crate::game::game::Game;
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::sync::Mutex;
+use std::time::UNIX_EPOCH;
 use warp::http::StatusCode;
 use warp::reject::Rejection;
 use warp::Filter;
@@ -23,6 +24,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
     let build_game = game.clone();
     let map_game = game.clone();
     let leaderboard_game = game.clone();
+    let day_game = game.clone();
 
     let shoot_action = warp::path("shoot")
         .and(warp::body::json())
@@ -150,6 +152,25 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 }
             });
 
+    let day_action = warp::path("day")
+        .and(warp::body::json())
+        .map(move |req: Request| {
+            let game = day_game.lock().unwrap();
+            match req {
+                Request::Info { requesting } if requesting.as_str() == "day" => {
+                    warp::reply::json(&ApiReply::Data(Reply::GameInfo {
+                        day: game.day,
+                        start_of_day: game
+                            .start_of_day
+                            .duration_since(UNIX_EPOCH)
+                            .unwrap()
+                            .as_secs(),
+                    }))
+                }
+                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            }
+        });
+
     let routes = warp::post()
         .and(
             shoot_action
@@ -159,7 +180,8 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 .or(donate_action)
                 .or(build_action)
                 .or(map_action)
-                .or(leaderboard_action),
+                .or(leaderboard_action)
+                .or(day_action),
         )
         .recover(handle_rejection);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;

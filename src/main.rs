@@ -9,7 +9,7 @@ use tzfile::Tz;
 
 #[tokio::main]
 async fn main() {
-    let players = vec!["mroik", "fin", "mallory"]
+    let players = ["mroik", "fin", "mallory"]
         .iter()
         .map(|p| String::from(*p))
         .collect();

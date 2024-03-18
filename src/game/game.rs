@@ -6,7 +6,7 @@ use super::{
     totem::Totem,
     zord::{Zord, BASE_RANGE},
 };
-use std::{collections::HashMap, time::Instant};
+use std::{collections::HashMap, time::SystemTime};
 
 const BASE_BOARD_SIZE: i16 = 70;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
@@ -19,8 +19,8 @@ const TOTEM_REWARD: u16 = 50;
 pub struct Game {
     pub players: Vec<Player>,
     pub board: Board,
-    start_of_day: Instant,
-    day: u8,
+    pub start_of_day: SystemTime,
+    pub day: u8,
 }
 
 impl Game {
@@ -29,7 +29,7 @@ impl Game {
         Game {
             players,
             board: Board::new(BASE_BOARD_SIZE),
-            start_of_day: Instant::now(),
+            start_of_day: SystemTime::now(),
             day: 0,
         }
     }
@@ -193,7 +193,7 @@ impl Game {
 
         // Check grace period
         let delta_t = self.start_of_day.elapsed();
-        if delta_t.as_secs() <= GRACE_PERIOD {
+        if delta_t.unwrap().as_secs() <= GRACE_PERIOD {
             return WoopError::within_grace_period();
         }
 
@@ -319,7 +319,7 @@ impl Game {
 
     pub fn new_day(&mut self) {
         // Set new day
-        self.start_of_day = Instant::now();
+        self.start_of_day = SystemTime::now();
         self.day += 1;
 
         // Reset actions
@@ -470,7 +470,7 @@ mod tests {
 
     #[test]
     fn new_game() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let game = Game::new(names.iter().map(|name| name.to_string()).collect());
         for x in game.players {
             assert!(names.contains(&x.name.as_str()));
@@ -479,7 +479,7 @@ mod tests {
 
     #[test]
     fn shoot_and_kill() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.start_of_day = game
             .start_of_day
@@ -506,7 +506,7 @@ mod tests {
 
     #[test]
     fn shoot_during_grace_period() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -521,7 +521,7 @@ mod tests {
 
     #[test]
     fn shoot_and_out_of_range() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -534,7 +534,7 @@ mod tests {
 
     #[test]
     fn shoot_but_not_found() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -547,7 +547,7 @@ mod tests {
 
     #[test]
     fn shoot_but_not_owned() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -560,7 +560,7 @@ mod tests {
 
     #[test]
     fn generate_shield() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.create_zord("mroik", 0, 0);
         let success = game.generate_shield("mroik", 0, 0);
@@ -571,7 +571,7 @@ mod tests {
 
     #[test]
     fn generate_shield_no_actions() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.create_zord("mroik", 0, 0);
         for _ in 0..5 {
@@ -585,7 +585,7 @@ mod tests {
 
     #[test]
     fn increase_range() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.create_zord("mroik", 0, 0);
         let _ = game.increase_range("mroik", 0, 0);
@@ -598,7 +598,7 @@ mod tests {
 
     #[test]
     fn new_day() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.create_zord("mroik", 0, 0);
         game.new_day();
@@ -615,7 +615,7 @@ mod tests {
 
     #[test]
     fn move_zord() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.create_zord("mroik", 0, 0);
         let success = game.move_zord("mroik", 0, 0, 1, 1);
@@ -627,7 +627,7 @@ mod tests {
 
     #[test]
     fn move_zord_out_of_bounds() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -640,7 +640,7 @@ mod tests {
 
     #[test]
     fn move_zord_out_of_range() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -653,7 +653,7 @@ mod tests {
 
     #[test]
     fn move_zord_cell_occupied() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -668,7 +668,7 @@ mod tests {
 
     #[test]
     fn donate_points() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.players
             .iter_mut()
@@ -697,7 +697,7 @@ mod tests {
 
     #[test]
     fn donate_points_amount_too_big() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.players
             .iter_mut()
@@ -726,7 +726,7 @@ mod tests {
 
     #[test]
     fn build_zord() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -754,7 +754,7 @@ mod tests {
 
     #[test]
     fn build_zord_out_of_range() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -774,7 +774,7 @@ mod tests {
 
     #[test]
     fn build_zord_not_enough_points() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -794,7 +794,7 @@ mod tests {
 
     #[test]
     fn give_out_points() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -812,7 +812,7 @@ mod tests {
 
     #[test]
     fn give_out_points_double() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -840,7 +840,7 @@ mod tests {
 
     #[test]
     fn give_out_out_of_range() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
@@ -858,7 +858,7 @@ mod tests {
 
     #[test]
     fn respawn() {
-        let names = vec!["mroik", "fin", "warden"];
+        let names = ["mroik", "fin", "warden"];
         let mut game = Game::new(names.iter().map(|name| name.to_string()).collect());
         game.respawn_players();
         assert_eq!(game.board.board.len(), 3);

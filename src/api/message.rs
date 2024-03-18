@@ -38,6 +38,6 @@ pub enum Request {
 pub enum Reply<'a> {
     Map(&'a Vec<Entity>),
     Leaderboard(&'a Vec<Player>),
-    Day(u8),
+    GameInfo { day: u8, start_of_day: u64 },
     Ok,
 }
