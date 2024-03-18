@@ -3,9 +3,9 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum ApiReply {
+pub enum ApiReply<'a> {
     Error(String),
-    Data(Reply),
+    Data(Reply<'a>),
 }
 
 #[derive(Deserialize, Clone)]
@@ -35,8 +35,8 @@ pub enum Request {
 
 #[derive(Serialize)]
 #[serde(rename_all = "lowercase")]
-pub enum Reply {
-    Map(Vec<Entity>),
+pub enum Reply<'a> {
+    Map(&'a Vec<Entity>),
     Leaderboard(Vec<Player>),
     Day(u8),
     Ok,

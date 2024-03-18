@@ -18,7 +18,7 @@ const TOTEM_REWARD: u16 = 50;
 #[derive(Debug)]
 pub struct Game {
     players: Vec<Player>,
-    board: Board,
+    pub board: Board,
     start_of_day: Instant,
     day: u8,
 }
