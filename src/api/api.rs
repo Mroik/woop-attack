@@ -20,6 +20,7 @@ pub async fn start_api(game: Mutex<Game>) {
     let shield_game = shoot_game.clone();
     let increase_game = shoot_game.clone();
     let donate_game = shoot_game.clone();
+    let build_game = shoot_game.clone();
 
     let shoot_action = warp::path("shoot")
         .and(warp::body::json())
@@ -106,13 +107,30 @@ pub async fn start_api(game: Mutex<Game>) {
                 }
             });
 
+    let build_action = warp::path("build-zord")
+        .and(warp::body::json())
+        .map(move |req: Request| {
+            let mut game = build_game.lock().unwrap();
+            match req {
+                Request::SingleCoord {
+                    player,
+                    coord: (x, y),
+                } => match game.build_zord(player.as_str(), x, y) {
+                    Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
+                },
+                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            }
+        });
+
     let routes = warp::post()
         .and(
             shoot_action
                 .or(move_action)
                 .or(shield_action)
                 .or(increase_action)
-                .or(donate_action),
+                .or(donate_action)
+                .or(build_action),
         )
         .recover(handle_rejection);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
