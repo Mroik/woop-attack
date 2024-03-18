@@ -217,8 +217,10 @@ impl Game {
 
         // Shoot and cleanup
         let mut t_name = String::new();
+        let mut should_sort = false;
         if target.zord_hit() {
             owner.points += KILL_REWARD;
+            should_sort = true;
             t_name = target.get_zord().unwrap().owner.clone();
         }
         self.clear_dead();
@@ -233,6 +235,11 @@ impl Game {
         if !t_name.is_empty() && !has_zords {
             let t_player = self.players.iter_mut().find(|p| p.name == t_name).unwrap();
             t_player.points = t_player.points * 2 / 3;
+        }
+
+        if should_sort {
+            self.players.sort_by_key(|p| p.points);
+            self.players.reverse();
         }
 
         Ok(())
@@ -487,8 +494,10 @@ mod tests {
             .points = 100;
         let _ = game.player_shoot("mroik", 0, 0, 1, 1);
         let success = game.player_shoot("mroik", 0, 0, 1, 1);
-        let points = game.players.get(0).unwrap().points;
-        let t_points = game.players.get(1).unwrap().points;
+
+        // Inverted since it is sorted on kill
+        let t_points = game.players.get(0).unwrap().points;
+        let points = game.players.get(1).unwrap().points;
         assert!(success.is_ok());
         assert_eq!(game.board.board.len(), 1);
         assert_eq!(points, 3);
