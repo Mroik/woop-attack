@@ -6,6 +6,7 @@ use std::sync::Mutex;
 use std::time::UNIX_EPOCH;
 use warp::http::StatusCode;
 use warp::reject::Rejection;
+use warp::reply::Json;
 use warp::Filter;
 use warp::Reply as WarpReply;
 
@@ -13,6 +14,18 @@ async fn handle_rejection(_: Rejection) -> Result<impl WarpReply, Infallible> {
     let msg = "Incorrect interaction with the api. Check method, endpoint and JSON data";
     let json = warp::reply::json(&ApiReply::Error(String::from(msg)));
     Ok(warp::reply::with_status(json, StatusCode::BAD_REQUEST))
+}
+
+fn get_game_status(game: &Game) -> Result<Json, ()> {
+    match game.day {
+        0 => Ok(warp::reply::json(&ApiReply::Error(
+            "Game hasn't started yet".to_string(),
+        ))),
+        29 => Ok(warp::reply::json(&ApiReply::Error(
+            "Game has ended".to_string(),
+        ))),
+        _ => Err(()),
+    }
 }
 
 pub async fn start_api(game: Arc<Mutex<Game>>) {
@@ -30,6 +43,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .map(move |req: Request| {
             let mut game = shoot_game.lock().unwrap();
+            if let Ok(resp) = get_game_status(&game) {
+                return resp;
+            }
             match req {
                 Request::DoubleCoord {
                     player,
@@ -47,6 +63,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .map(move |req: Request| {
             let mut game = move_game.lock().unwrap();
+            if let Ok(resp) = get_game_status(&game) {
+                return resp;
+            }
             match req {
                 Request::DoubleCoord {
                     player,
@@ -64,6 +83,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .map(move |req: Request| {
             let mut game = shield_game.lock().unwrap();
+            if let Ok(resp) = get_game_status(&game) {
+                return resp;
+            }
             match req {
                 Request::SingleCoord {
                     player,
@@ -81,6 +103,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             .and(warp::body::json())
             .map(move |req: Request| {
                 let mut game = increase_game.lock().unwrap();
+                if let Ok(resp) = get_game_status(&game) {
+                    return resp;
+                }
                 match req {
                     Request::SingleCoord {
                         player,
@@ -98,6 +123,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             .and(warp::body::json())
             .map(move |req: Request| {
                 let mut game = donate_game.lock().unwrap();
+                if let Ok(resp) = get_game_status(&game) {
+                    return resp;
+                }
                 match req {
                     Request::Donate {
                         donator,
@@ -115,6 +143,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .map(move |req: Request| {
             let mut game = build_game.lock().unwrap();
+            if let Ok(resp) = get_game_status(&game) {
+                return resp;
+            }
             match req {
                 Request::SingleCoord {
                     player,
