@@ -25,7 +25,6 @@ pub struct Game {
 }
 
 impl Game {
-    // TODO Setup scheduled start of game
     pub fn new(config: &Config) -> Self {
         let players = config
             .players
