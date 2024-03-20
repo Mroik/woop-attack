@@ -3,18 +3,15 @@ use std::{
     fs::read,
     time::{Duration, SystemTime, UNIX_EPOCH},
 };
-use tzfile::Tz;
 
 #[derive(Deserialize)]
 struct RawConfig {
     players: String,
-    timezone: String,
     start_of_game: u64,
 }
 
 pub struct Config {
     pub players: Vec<String>,
-    pub timezone: Tz,
     pub start_of_game: SystemTime,
 }
 
@@ -25,8 +22,6 @@ impl Config {
         let config: RawConfig = toml::from_str(data.as_str()).unwrap();
         Self {
             players: config.players.split('|').map(|s| String::from(s)).collect(),
-            timezone: tzfile::Tz::named(config.timezone.as_str())
-                .expect(format!("Couldn't find timezone {}", config.timezone.as_str()).as_str()),
             start_of_game: UNIX_EPOCH + Duration::from_secs(config.start_of_game),
         }
     }

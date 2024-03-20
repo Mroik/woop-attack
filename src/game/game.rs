@@ -474,7 +474,6 @@ mod tests {
         game::{game::GRACE_PERIOD, player::BASE_ACTIONS, zord::BASE_RANGE},
     };
     use std::time::{Duration, SystemTime};
-    use tzfile::Tz;
 
     fn generate_game() -> Game {
         let config = Config {
@@ -483,7 +482,6 @@ mod tests {
                 .map(|s| String::from(*s))
                 .collect(),
             start_of_game: SystemTime::now(),
-            timezone: Tz::named("Europe/Rome").unwrap(),
         };
         Game::new(&config)
     }

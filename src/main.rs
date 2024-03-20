@@ -22,7 +22,7 @@ async fn main() {
     let game = Arc::new(Mutex::new(Game::new(&config)));
     let scheduler_game = game.clone();
 
-    let mut scheduler = Scheduler::with_tz(&config.timezone);
+    let mut scheduler = Scheduler::new();
     scheduler.every(1.day()).at("6:00 am").run(move || {
         scheduler_game.lock().unwrap().new_day();
     });
