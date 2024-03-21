@@ -42,7 +42,7 @@ impl Game {
             let mut hasher = Sha256::new();
             hasher.update(rng.gen::<[u8; 32]>());
             let data = hasher.finalize().to_vec();
-            let mut password = String::from(URL_SAFE.encode(data));
+            let mut password = URL_SAFE.encode(data);
             password.truncate(100);
             auth.insert(p.name.clone(), password);
         });
@@ -373,7 +373,7 @@ impl Game {
             .filter(|(_, many)| **many == 0)
             .map(|(p, _)| p)
             .collect();
-        while to_spawn.len() > 0 {
+        while !to_spawn.is_empty() {
             let player = to_spawn.remove(rng.gen_range(0..to_spawn.len()));
             let (x, y) = self.calculate_respawn_coordinates();
             self.create_zord(player.as_str(), x, y);
