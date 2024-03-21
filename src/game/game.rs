@@ -8,7 +8,7 @@ use super::{
 };
 use crate::config::Config;
 use base64::{engine::general_purpose::URL_SAFE, Engine};
-use rand::Rng;
+use rand::{thread_rng, Rng};
 use sha2::{Digest, Sha256};
 use std::{collections::HashMap, time::SystemTime};
 
@@ -324,6 +324,7 @@ impl Game {
     }
 
     fn respawn_players(&mut self) {
+        let mut rng = thread_rng();
         let mut players = HashMap::new();
         for player in self.players.iter() {
             players.insert(String::from(player.name.as_str()), 0);
@@ -339,8 +340,13 @@ impl Game {
                 players.insert(z.owner.clone(), v + 1);
             });
 
-        let to_spawn = players.iter().filter(|(_, many)| **many == 0);
-        for (player, _) in to_spawn {
+        let mut to_spawn: Vec<&String> = players
+            .iter()
+            .filter(|(_, many)| **many == 0)
+            .map(|(p, _)| p)
+            .collect();
+        while to_spawn.len() > 0 {
+            let player = to_spawn.remove(rng.gen_range(0..to_spawn.len()));
             let (x, y) = self.calculate_respawn_coordinates();
             self.create_zord(player.as_str(), x, y);
         }
