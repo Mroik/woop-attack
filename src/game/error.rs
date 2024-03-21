@@ -17,6 +17,7 @@ pub enum WoopError {
     WithinGracePeriod,
     NoZordNearby(i16, i16),
     NotOwned(i16, i16),
+    AuthError,
 }
 
 impl WoopError {
@@ -87,6 +88,7 @@ impl Display for WoopError {
             Self::WithinGracePeriod => write!(f, "You tried shooting within the grace period"),
             Self::NoZordNearby(x, y) => write!(f, "There's no zord nearby ({}, {})", x, y),
             Self::NotOwned(x, y) => write!(f, "You don't own the zord in ({}, {})", x, y),
+            Self::AuthError => write!(f, "Couldn't authenticate"),
         }
     }
 }

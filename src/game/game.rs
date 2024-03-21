@@ -7,6 +7,9 @@ use super::{
     zord::{Zord, BASE_RANGE},
 };
 use crate::config::Config;
+use base64::{engine::general_purpose::URL_SAFE, Engine};
+use rand::Rng;
+use sha2::{Digest, Sha256};
 use std::{collections::HashMap, time::SystemTime};
 
 const BASE_BOARD_SIZE: i16 = 70;
@@ -22,20 +25,41 @@ pub struct Game {
     pub board: Board,
     pub start_of_day: SystemTime,
     pub day: u8,
+    auth: HashMap<String, String>,
 }
 
 impl Game {
     pub fn new(config: &Config) -> Self {
-        let players = config
+        let players: Vec<Player> = config
             .players
             .iter()
             .map(|name| Player::new(name))
             .collect();
+
+        let mut rng = rand::thread_rng();
+        let mut auth = HashMap::new();
+        players.iter().for_each(|p| {
+            let mut hasher = Sha256::new();
+            hasher.update(rng.gen::<[u8; 32]>());
+            let data = hasher.finalize().to_vec();
+            let mut password = String::from(URL_SAFE.encode(data));
+            password.truncate(100);
+            auth.insert(p.name.clone(), password);
+        });
+
         Game {
             players,
             board: Board::new(BASE_BOARD_SIZE),
             start_of_day: SystemTime::now(),
             day: 0,
+            auth,
+        }
+    }
+
+    pub fn authenticate(&self, username: &str, pass: &str) -> Result<(), WoopError> {
+        match self.auth.get(username) {
+            Some(p) if p.as_str() == pass => Ok(()),
+            _ => Err(WoopError::AuthError),
         }
     }
 
