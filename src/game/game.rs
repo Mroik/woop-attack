@@ -351,6 +351,10 @@ impl Game {
         self.start_of_day = SystemTime::now();
         self.day += 1;
 
+        if self.day == 1 {
+            return;
+        }
+
         // Reset actions
         self.players
             .iter_mut()
