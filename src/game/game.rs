@@ -101,6 +101,11 @@ impl Game {
     }
 
     pub fn donate_points(&mut self, from: &str, to: &str, amount: u16) -> Result<(), WoopError> {
+        // Limit donations to 10 points
+        if amount > 10 {
+            return WoopError::donation_limit();
+        }
+
         // Target exist
         if !self.players.iter().any(|p| p.name == to) {
             return WoopError::player_not_found(to);
