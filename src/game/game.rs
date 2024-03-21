@@ -123,6 +123,29 @@ impl Game {
             return WoopError::not_enough_points(pf.points, amount);
         }
 
+        // Check if within range for donation (range for donations is shared with the range for
+        // shooting
+        let mut s_zord = self
+            .board
+            .board
+            .iter()
+            .filter(|z| z.is_zord())
+            .map(|z| z.get_zord().unwrap())
+            .filter(|z| z.owner.as_str() == from);
+        let mut t_zord = self
+            .board
+            .board
+            .iter()
+            .filter(|z| z.is_zord())
+            .map(|z| z.get_zord().unwrap())
+            .filter(|z| z.owner.as_str() == to);
+
+        let is_in_range = s_zord
+            .any(|s| t_zord.any(|t| (s.x - t.x).abs().max((s.y - t.y).abs()) <= s.range as i16));
+        if !is_in_range {
+            return WoopError::donation_out_of_range();
+        }
+
         // Has enough actions
         if pf.actions == 0 {
             return WoopError::out_of_actions();
@@ -716,7 +739,9 @@ mod tests {
             .find(|p| p.name == "mroik")
             .unwrap()
             .points = 100;
-        let success = game.donate_points("mroik", "fin", 30);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 1, 1);
+        let success = game.donate_points("mroik", "fin", 10);
         assert!(success.is_ok());
         assert_eq!(
             game.players
@@ -724,7 +749,7 @@ mod tests {
                 .find(|p| p.name == "mroik")
                 .unwrap()
                 .points,
-            70
+            90
         );
         assert_eq!(
             game.players
@@ -732,7 +757,7 @@ mod tests {
                 .find(|p| p.name == "fin")
                 .unwrap()
                 .points,
-            30
+            10
         );
     }
 

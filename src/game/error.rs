@@ -19,6 +19,7 @@ pub enum WoopError {
     NotOwned(i16, i16),
     AuthError,
     DonationLimit,
+    DonationRange,
 }
 
 impl WoopError {
@@ -69,6 +70,10 @@ impl WoopError {
     pub fn donation_limit() -> Result<(), WoopError> {
         Err(WoopError::DonationLimit)
     }
+
+    pub fn donation_out_of_range() -> Result<(), WoopError> {
+        Err(WoopError::DonationRange)
+    }
 }
 
 impl Error for WoopError {}
@@ -95,6 +100,7 @@ impl Display for WoopError {
             Self::NotOwned(x, y) => write!(f, "You don't own the zord in ({}, {})", x, y),
             Self::AuthError => write!(f, "Couldn't authenticate"),
             Self::DonationLimit => write!(f, "You can donate at most 10 points with each action"),
+            Self::DonationRange => write!(f, "Out of range for a donation"),
         }
     }
 }
