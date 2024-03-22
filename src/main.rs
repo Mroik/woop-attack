@@ -24,21 +24,14 @@ async fn main() {
 
     let game = Arc::new(Mutex::new(Game::new(&config)));
     let scheduler_game = game.clone();
-    let start_game = game.clone();
 
     let mut scheduler = Scheduler::new();
     scheduler.every(1.day()).at("6:00 am").run(move || {
         let mut game = scheduler_game.lock().unwrap();
-        if game.day > 0 && game.day < 29 {
-            game.new_day();
-        }
-    });
-    scheduler.every(1.minute()).run(move || {
-        let mut game = start_game.lock().unwrap();
         let start_stamp = game.start_of_day.duration_since(UNIX_EPOCH).unwrap();
         let current_stamp = SystemTime::now().duration_since(UNIX_EPOCH).unwrap();
         let passed_day = start_stamp <= current_stamp;
-        if game.day == 0 && passed_day {
+        if (game.day > 0 && game.day < 29) || (game.day == 0 && passed_day) {
             game.new_day();
         }
     });
