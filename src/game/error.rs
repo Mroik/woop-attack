@@ -20,6 +20,7 @@ pub enum WoopError {
     AuthError,
     DonationLimit,
     DonationRange,
+    OwnZord,
 }
 
 impl WoopError {
@@ -74,6 +75,10 @@ impl WoopError {
     pub fn donation_out_of_range() -> Result<(), WoopError> {
         Err(WoopError::DonationRange)
     }
+
+    pub fn own_zord() -> Result<(), WoopError> {
+        Err(WoopError::OwnZord)
+    }
 }
 
 impl Error for WoopError {}
@@ -101,6 +106,7 @@ impl Display for WoopError {
             Self::AuthError => write!(f, "Couldn't authenticate"),
             Self::DonationLimit => write!(f, "You can donate at most 10 points with each action"),
             Self::DonationRange => write!(f, "Out of range for a donation"),
+            Self::OwnZord => write!(f, "You can't shoot your own zord"),
         }
     }
 }

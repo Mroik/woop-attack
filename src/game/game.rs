@@ -263,7 +263,6 @@ impl Game {
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
-        owner.spend_action();
 
         let target = self
             .board
@@ -271,6 +270,13 @@ impl Game {
             .iter_mut()
             .find(|entity| entity.is_coord(x_t, y_t) && entity.is_zord())
             .unwrap();
+
+        // Check if target is your own
+        if target.get_zord().unwrap().owner.as_str() == player {
+            return WoopError::own_zord();
+        }
+
+        owner.spend_action();
 
         // Shoot and cleanup
         let mut t_name = String::new();
