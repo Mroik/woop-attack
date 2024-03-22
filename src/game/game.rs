@@ -385,6 +385,9 @@ impl Game {
         self.start_of_day = SystemTime::now();
         self.day += 1;
 
+        self.give_out_totem_points();
+        self.respawn_players();
+
         // Spawn totems at the beginning of the week
         if self.day % 7 == 1 {
             self.spawn_totems();
@@ -402,9 +405,6 @@ impl Game {
                 z.shields = 0;
             }
         });
-
-        self.give_out_totem_points();
-        self.respawn_players();
     }
 
     pub fn increase_range(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
@@ -536,18 +536,29 @@ impl Game {
                 rng.gen_range(0..BASE_BOARD_SIZE),
                 rng.gen_range(0..BASE_BOARD_SIZE),
             );
-            if x_t == 0 || y_t == 0 {
+            if (x_t - x_c).abs() == 0 || (y_t - y_c).abs() == 0 {
                 continue;
             }
 
-            let m = (y_c - y_t).abs() / (x_c - x_t).abs();
+            let m = ((y_c - y_t).abs()) / ((x_c - x_t).abs());
             let q = y_t - (m * x_t);
             let f = |x: i16| x * m + q;
             let diff = (x_c - x_t).abs();
 
             let t1 = (x_c - diff, f(x_c - diff));
             let t2 = (x_c + diff, f(x_c + diff));
-            if (t1.0 - t2.0).abs().max((t1.1 - t2.1).abs()) > TOTEM_AURA as i16 {
+
+            let is_far_enough =
+                (t1.0 - t2.0).abs().max((t1.1 - t2.1).abs()) > (TOTEM_AURA * 2) as i16;
+            let is_in_bounds = t1.0 >= 0
+                && t1.0 < BASE_BOARD_SIZE
+                && t1.1 >= 0
+                && t1.1 < BASE_BOARD_SIZE
+                && t2.0 >= 0
+                && t2.0 < BASE_BOARD_SIZE
+                && t2.1 >= 0
+                && t2.1 < BASE_BOARD_SIZE;
+            if is_far_enough && is_in_bounds {
                 self.create_totem(t1.0, t1.1).unwrap();
                 self.create_totem(t2.0, t2.1).unwrap();
                 break;
