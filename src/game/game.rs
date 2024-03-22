@@ -385,8 +385,9 @@ impl Game {
         self.start_of_day = SystemTime::now();
         self.day += 1;
 
-        if self.day == 1 {
-            return;
+        // Spawn totems at the beginning of the week
+        if self.day % 7 == 1 {
+            self.spawn_totems();
         }
 
         // Reset actions
@@ -524,6 +525,34 @@ impl Game {
             }
         }
         ris
+    }
+
+    fn spawn_totems(&mut self) {
+        let mut rng = rand::thread_rng();
+        self.board.board.retain(|t| t.is_zord());
+        let (x_c, y_c) = (BASE_BOARD_SIZE / 2, BASE_BOARD_SIZE / 2);
+        loop {
+            let (x_t, y_t) = (
+                rng.gen_range(0..BASE_BOARD_SIZE),
+                rng.gen_range(0..BASE_BOARD_SIZE),
+            );
+            if x_t == 0 || y_t == 0 {
+                continue;
+            }
+
+            let m = (y_c - y_t).abs() / (x_c - x_t).abs();
+            let q = y_t - (m * x_t);
+            let f = |x: i16| x * m + q;
+            let diff = (x_c - x_t).abs();
+
+            let t1 = (x_c - diff, f(x_c - diff));
+            let t2 = (x_c + diff, f(x_c + diff));
+            if (t1.0 - t2.0).abs().max((t1.1 - t2.1).abs()) > TOTEM_AURA as i16 {
+                self.create_totem(t1.0, t1.1).unwrap();
+                self.create_totem(t2.0, t2.1).unwrap();
+                break;
+            }
+        }
     }
 }
 
@@ -679,7 +708,8 @@ mod tests {
         assert_eq!(game.players.get(0).unwrap().actions, BASE_ACTIONS);
         assert_eq!(zord.range, BASE_RANGE);
         assert_eq!(zord.shields, 0);
-        assert_eq!(game.board.board.len(), 3);
+        assert_eq!(game.board.board.iter().filter(|z| z.is_zord()).count(), 3);
+        assert_eq!(game.board.board.iter().filter(|z| !z.is_zord()).count(), 2);
     }
 
     #[test]
