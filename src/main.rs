@@ -40,6 +40,12 @@ async fn main() {
     });
     let scheduler_handler = scheduler.watch_thread(Duration::from_secs(60));
 
+    game.lock()
+        .unwrap()
+        .auth
+        .iter()
+        .for_each(|(user, pass)| println!("User: {}\nToken: {}", user, pass));
+
     start_api(game).await;
     scheduler_handler.stop();
 }
