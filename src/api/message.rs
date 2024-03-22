@@ -26,11 +26,6 @@ pub enum Request {
         receiver: String,
         amount: u16,
     },
-
-    // Data retrival
-    Info {
-        requesting: String,
-    },
 }
 
 #[derive(Serialize)]

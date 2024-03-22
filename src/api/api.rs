@@ -192,66 +192,28 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             }
         });
 
-    let map_action = warp::path("map")
-        .and(warp::body::json())
-        .and(warp::header("username"))
-        .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
-            let game = map_game.lock().unwrap();
-            if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
-            }
+    let map_action = warp::path("map").map(move || {
+        let game = map_game.lock().unwrap();
+        warp::reply::json(&ApiReply::Data(Reply::Map(&game.board.board)))
+    });
 
-            match req {
-                Request::Info { requesting } if requesting.as_str() == "map" => {
-                    warp::reply::json(&ApiReply::Data(Reply::Map(&game.board.board)))
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
-            }
-        });
+    let leaderboard_action = warp::path("leaderboard").map(move || {
+        let game = leaderboard_game.lock().unwrap();
+        warp::reply::json(&ApiReply::Data(Reply::Leaderboard(&game.players)))
+    });
 
-    let leaderboard_action = warp::path("leaderboard")
-        .and(warp::body::json())
-        .and(warp::header("username"))
-        .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
-            let game = leaderboard_game.lock().unwrap();
-            if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
-            }
+    let day_action = warp::path("day").map(move || {
+        let game = day_game.lock().unwrap();
 
-            match req {
-                Request::Info { requesting } if requesting.as_str() == "leaderboard" => {
-                    warp::reply::json(&ApiReply::Data(Reply::Leaderboard(&game.players)))
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
-            }
-        });
-
-    let day_action = warp::path("day")
-        .and(warp::body::json())
-        .and(warp::header("username"))
-        .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
-            let game = day_game.lock().unwrap();
-            if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
-            }
-
-            match req {
-                Request::Info { requesting } if requesting.as_str() == "day" => {
-                    warp::reply::json(&ApiReply::Data(Reply::GameInfo {
-                        day: game.day,
-                        start_of_day: game
-                            .start_of_day
-                            .duration_since(UNIX_EPOCH)
-                            .unwrap()
-                            .as_secs(),
-                    }))
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
-            }
-        });
+        warp::reply::json(&ApiReply::Data(Reply::GameInfo {
+            day: game.day,
+            start_of_day: game
+                .start_of_day
+                .duration_since(UNIX_EPOCH)
+                .unwrap()
+                .as_secs(),
+        }))
+    });
 
     let routes = warp::post()
         .and(
