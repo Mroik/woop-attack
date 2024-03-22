@@ -12,20 +12,9 @@ pub enum ApiReply<'a> {
 #[serde(untagged)]
 pub enum Request {
     // Actions
-    DoubleCoord {
-        player: String,
-        from: (i16, i16),
-        to: (i16, i16),
-    },
-    SingleCoord {
-        player: String,
-        coord: (i16, i16),
-    },
-    Donate {
-        donator: String,
-        receiver: String,
-        amount: u16,
-    },
+    DoubleCoord { from: (i16, i16), to: (i16, i16) },
+    SingleCoord { coord: (i16, i16) },
+    Donate { receiver: String, amount: u16 },
 }
 
 #[derive(Serialize)]

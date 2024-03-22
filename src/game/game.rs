@@ -25,7 +25,7 @@ pub struct Game {
     pub board: Board,
     pub start_of_day: SystemTime,
     pub day: u8,
-    auth: HashMap<String, String>,
+    pub auth: HashMap<String, String>,
 }
 
 impl Game {

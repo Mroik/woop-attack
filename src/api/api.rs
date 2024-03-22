@@ -54,10 +54,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             }
             match req {
                 Request::DoubleCoord {
-                    player,
                     from: (x_f, y_f),
                     to: (x_t, y_t),
-                } => match game.player_shoot(player.as_str(), x_f, y_f, x_t, y_t) {
+                } => match game.player_shoot(username.as_str(), x_f, y_f, x_t, y_t) {
                     Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                     Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
@@ -80,10 +79,9 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             }
             match req {
                 Request::DoubleCoord {
-                    player,
                     from: (x_f, y_f),
                     to: (x_t, y_t),
-                } => match game.move_zord(player.as_str(), x_f, y_f, x_t, y_t) {
+                } => match game.move_zord(username.as_str(), x_f, y_f, x_t, y_t) {
                     Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
                     Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
                 },
@@ -105,13 +103,12 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 return resp;
             }
             match req {
-                Request::SingleCoord {
-                    player,
-                    coord: (x, y),
-                } => match game.generate_shield(player.as_str(), x, y) {
-                    Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                },
+                Request::SingleCoord { coord: (x, y) } => {
+                    match game.generate_shield(username.as_str(), x, y) {
+                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
+                    }
+                }
                 _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
@@ -130,13 +127,12 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 return resp;
             }
             match req {
-                Request::SingleCoord {
-                    player,
-                    coord: (x, y),
-                } => match game.increase_range(player.as_str(), x, y) {
-                    Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                },
+                Request::SingleCoord { coord: (x, y) } => {
+                    match game.increase_range(username.as_str(), x, y) {
+                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
+                    }
+                }
                 _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
@@ -155,14 +151,12 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 return resp;
             }
             match req {
-                Request::Donate {
-                    donator,
-                    receiver,
-                    amount,
-                } => match game.donate_points(donator.as_str(), receiver.as_str(), amount) {
-                    Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                },
+                Request::Donate { receiver, amount } => {
+                    match game.donate_points(username.as_str(), receiver.as_str(), amount) {
+                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
+                    }
+                }
                 _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
@@ -181,13 +175,12 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 return resp;
             }
             match req {
-                Request::SingleCoord {
-                    player,
-                    coord: (x, y),
-                } => match game.build_zord(player.as_str(), x, y) {
-                    Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                },
+                Request::SingleCoord { coord: (x, y) } => {
+                    match game.build_zord(username.as_str(), x, y) {
+                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
+                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
+                    }
+                }
                 _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
             }
         });
