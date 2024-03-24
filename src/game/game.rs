@@ -12,12 +12,13 @@ use rand::{thread_rng, Rng};
 use sha2::{Digest, Sha256};
 use std::{collections::HashMap, time::SystemTime};
 
-const BASE_BOARD_SIZE: i16 = 70;
+const BASE_BOARD_SIZE: i16 = 140;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
 const NEW_ZORD_COST: u16 = 10;
 const KILL_REWARD: u16 = 3;
-const TOTEM_AURA: u16 = 2;
+const TOTEM_AURA: u16 = 5;
 const TOTEM_REWARD: u16 = 50;
+const ACTION_COST: u8 = 4;
 
 #[derive(Debug)]
 pub struct Game {
@@ -91,7 +92,7 @@ impl Game {
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
-        owner.spend_action();
+        owner.spend_action(ACTION_COST);
 
         if zord.zord_generate_shield() {
             Ok(())
@@ -150,7 +151,7 @@ impl Game {
         if pf.actions == 0 {
             return WoopError::out_of_actions();
         }
-        pf.spend_action();
+        pf.spend_action(ACTION_COST);
 
         pf.points -= amount;
         let pt = self.players.iter_mut().find(|p| p.name == to).unwrap();
@@ -208,7 +209,7 @@ impl Game {
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
-        owner.spend_action();
+        owner.spend_action(1);
         if zord.move_zord(x_t, y_t) {
             Ok(())
         } else {
@@ -276,7 +277,7 @@ impl Game {
             return WoopError::own_zord();
         }
 
-        owner.spend_action();
+        owner.spend_action(ACTION_COST);
 
         // Shoot and cleanup
         let mut t_name = String::new();
@@ -441,7 +442,7 @@ impl Game {
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
-        owner.spend_action();
+        owner.spend_action(ACTION_COST);
         if zord.zord_increase_range() {
             Ok(())
         } else {
@@ -480,7 +481,7 @@ impl Game {
         }
 
         let p = self.players.iter_mut().find(|p| p.name == player).unwrap();
-        p.spend_action();
+        p.spend_action(ACTION_COST);
         p.points -= NEW_ZORD_COST;
         self.board
             .board
@@ -709,7 +710,7 @@ mod tests {
             game.board.board.first().unwrap().get_zord().unwrap().range,
             6
         );
-        assert_eq!(game.players.get(0).unwrap().actions, 4);
+        assert_eq!(game.players.get(0).unwrap().actions, 16);
     }
 
     #[test]
@@ -858,7 +859,7 @@ mod tests {
             .unwrap();
         let p = game.players.get(0).unwrap();
         assert!(success.is_ok());
-        assert_eq!(p.actions, 4);
+        assert_eq!(p.actions, 16);
         assert_eq!(p.points, 0);
         assert_eq!(z.owner, "mroik");
     }
@@ -877,7 +878,7 @@ mod tests {
         let success = game.build_zord("mroik", 3, 3);
         let p = game.players.get(0).unwrap();
         assert!(success.is_err());
-        assert_eq!(p.actions, 5);
+        assert_eq!(p.actions, 20);
         assert_eq!(p.points, 10);
         assert_eq!(game.board.board.iter().len(), 1);
     }
@@ -896,7 +897,7 @@ mod tests {
         let success = game.build_zord("mroik", 1, 1);
         let p = game.players.get(0).unwrap();
         assert!(success.is_err());
-        assert_eq!(p.actions, 5);
+        assert_eq!(p.actions, 20);
         assert_eq!(p.points, 9);
         assert_eq!(game.board.board.iter().len(), 1);
     }

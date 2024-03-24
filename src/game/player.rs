@@ -1,6 +1,6 @@
 use serde::Serialize;
 
-pub const BASE_ACTIONS: u8 = 5;
+pub const BASE_ACTIONS: u8 = 20;
 
 #[derive(PartialEq, Clone, Debug, Serialize)]
 pub struct Player {
@@ -18,7 +18,7 @@ impl Player {
         }
     }
 
-    pub fn spend_action(&mut self) {
-        self.actions -= 1;
+    pub fn spend_action(&mut self, amount: u8) {
+        self.actions -= amount;
     }
 }
