@@ -1,5 +1,6 @@
 stages:
   - correct
+  - build_rules_pdf
 
 check-format:
   stage: correct
@@ -22,3 +23,12 @@ run-tests:
       coverage_report:
         coverage_format: cobertura
         path: target/llvm-cov/html/coverage/coverage.xml
+
+pandoc:
+  stage: build_rules_pdf
+  image: pandoc/latex
+  script:
+    - pandoc rules.md -o rules.pdf --metadata=title:"Woop-Attack" --metadata=author:"Mroik <mroik@delayed.space>"
+  artifacts:
+    paths:
+      - rules.pdf
