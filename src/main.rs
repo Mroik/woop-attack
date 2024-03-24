@@ -3,7 +3,6 @@ pub mod config;
 mod game;
 
 use api::api::start_api;
-use chrono::{DateTime, Local};
 use clap::Parser;
 use clokwerk::{Job, Scheduler, TimeUnits};
 use config::Config;
@@ -20,8 +19,6 @@ struct Args {
 
 #[tokio::main]
 async fn main() {
-    let a: DateTime<Local> = (UNIX_EPOCH + Duration::from_secs(1711342800)).into();
-    println!("{}", a);
     let args = Args::parse();
     let config = Config::read_file(args.config.as_str());
 
