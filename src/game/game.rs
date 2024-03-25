@@ -2,7 +2,7 @@ use super::{
     board::Board,
     entity::Entity,
     error::WoopError,
-    log::PlayerEvent,
+    log::Logger,
     player::{Player, BASE_ACTIONS},
     totem::Totem,
     zord::{Zord, BASE_RANGE},
@@ -11,10 +11,7 @@ use crate::config::Config;
 use base64::{engine::general_purpose::URL_SAFE, Engine};
 use rand::{thread_rng, Rng};
 use sha2::{Digest, Sha256};
-use std::{
-    collections::HashMap,
-    time::{SystemTime, UNIX_EPOCH},
-};
+use std::{collections::HashMap, time::SystemTime};
 
 const BASE_BOARD_SIZE: i16 = 140;
 const GRACE_PERIOD: u64 = 60 * 60 * 3;
@@ -24,10 +21,6 @@ const TOTEM_AURA: u16 = 5;
 const TOTEM_REWARD: u16 = 50;
 const ACTION_COST: u8 = 4;
 
-fn unix_timestamp() -> u64 {
-    SystemTime::from(UNIX_EPOCH).elapsed().unwrap().as_secs()
-}
-
 #[derive(Debug)]
 pub struct Game {
     pub players: Vec<Player>,
@@ -35,7 +28,7 @@ pub struct Game {
     pub start_of_day: SystemTime,
     pub day: u8,
     pub auth: HashMap<String, String>,
-    pub logged_actions: Vec<PlayerEvent>,
+    pub logged_actions: Logger,
 }
 
 impl Game {
@@ -63,7 +56,7 @@ impl Game {
             start_of_day: SystemTime::now(),
             day: 0,
             auth,
-            logged_actions: Vec::new(),
+            logged_actions: Logger::new(),
         }
     }
 
@@ -105,11 +98,7 @@ impl Game {
         owner.spend_action(ACTION_COST);
 
         if zord.zord_generate_shield() {
-            self.logged_actions.push(PlayerEvent::GenerateShield {
-                player: player.to_string(),
-                zord_coord: (x, y),
-                timestamp: unix_timestamp(),
-            });
+            self.logged_actions.generate_shield(player, (x, y));
             Ok(())
         } else {
             WoopError::generic()
@@ -172,11 +161,7 @@ impl Game {
         let pt = self.players.iter_mut().find(|p| p.name == to).unwrap();
         pt.points += amount;
 
-        self.logged_actions.push(PlayerEvent::DonatePoints {
-            from: from.to_string(),
-            to: to.to_string(),
-            timestamp: unix_timestamp(),
-        });
+        self.logged_actions.donate_points(from, to);
         Ok(())
     }
 
@@ -232,12 +217,8 @@ impl Game {
         }
         owner.spend_action(1);
         if zord.move_zord(x_t, y_t) {
-            self.logged_actions.push(PlayerEvent::Move {
-                player: player.to_string(),
-                from: (x_f, y_f),
-                to: (x_t, y_t),
-                timestamp: unix_timestamp(),
-            });
+            self.logged_actions
+                .move_zord(player, (x_f, y_f), (x_t, y_t));
             Ok(())
         } else {
             WoopError::generic()
@@ -314,7 +295,7 @@ impl Game {
             should_sort = true;
             t_name = target.get_zord().unwrap().owner.clone();
         }
-        let target = target.get_zord().unwrap().owner.to_string();
+        let target = target.get_zord().unwrap().owner.clone();
         self.clear_dead();
 
         let has_zords = self
@@ -334,13 +315,8 @@ impl Game {
             self.players.reverse();
         }
 
-        self.logged_actions.push(PlayerEvent::Shoot {
-            shooter: player.to_string(),
-            from: (x_f, y_f),
-            to: (x_t, y_t),
-            target,
-            timestamp: unix_timestamp(),
-        });
+        self.logged_actions
+            .shoot(player, (x_f, y_f), (x_t, y_t), target.as_str());
         Ok(())
     }
 
@@ -389,12 +365,11 @@ impl Game {
                 let many = in_bounds.get(player).unwrap();
                 let p = self.players.iter_mut().find(|p| p.name == *player).unwrap();
                 p.points += TOTEM_REWARD / total * many;
-                self.logged_actions.push(PlayerEvent::TotemPoints {
-                    player: p.name.clone(),
-                    coord: (x_t, y_t),
-                    points: TOTEM_REWARD / total * many,
-                    timestamp: unix_timestamp(),
-                });
+                self.logged_actions.totem_points(
+                    player.as_str(),
+                    (x_t, y_t),
+                    TOTEM_REWARD / total * many,
+                );
             }
         }
     }
@@ -425,11 +400,7 @@ impl Game {
             let player = to_spawn.remove(rng.gen_range(0..to_spawn.len()));
             let (x, y) = self.calculate_respawn_coordinates();
             self.create_zord(player.as_str(), x, y);
-            self.logged_actions.push(PlayerEvent::Respawn {
-                player: player.clone(),
-                coord: (x, y),
-                timestamp: unix_timestamp(),
-            });
+            self.logged_actions.respawn(player, (x, y));
         }
     }
 
@@ -490,11 +461,7 @@ impl Game {
         }
         owner.spend_action(ACTION_COST);
         if zord.zord_increase_range() {
-            self.logged_actions.push(PlayerEvent::IncreaseRange {
-                player: player.to_string(),
-                zord_coord: (x, y),
-                timestamp: unix_timestamp(),
-            });
+            self.logged_actions.increase_range(player, (x, y));
             Ok(())
         } else {
             WoopError::generic()
@@ -538,11 +505,7 @@ impl Game {
             .board
             .push(Entity::Zord(Zord::new(p.name.as_str(), x, y)));
 
-        self.logged_actions.push(PlayerEvent::BuildZord {
-            player: player.to_string(),
-            zord_coord: (x, y),
-            timestamp: unix_timestamp(),
-        });
+        self.logged_actions.build_zord(player, (x, y));
         Ok(())
     }
 
@@ -626,14 +589,8 @@ impl Game {
                 self.create_totem(t1.0, t1.1).unwrap();
                 self.create_totem(t2.0, t2.1).unwrap();
 
-                self.logged_actions.push(PlayerEvent::TotemSpawned {
-                    coord: (t1.0, t1.1),
-                    timestamp: unix_timestamp(),
-                });
-                self.logged_actions.push(PlayerEvent::TotemSpawned {
-                    coord: (t2.0, t2.1),
-                    timestamp: unix_timestamp(),
-                });
+                self.logged_actions.totem_spawned((t1.0, t1.1));
+                self.logged_actions.totem_spawned((t2.0, t2.1));
                 break;
             }
         }
