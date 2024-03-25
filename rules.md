@@ -5,6 +5,7 @@ Basic rules:
 -----------
 
 - A game lasts 4 weeks
+- The map is a grid of the size of 140x140
 - A player can control up to 3 zords
 - A zord has 2 lives
 - Each player each day gets 20 actions per day
