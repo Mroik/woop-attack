@@ -1,4 +1,4 @@
-use crate::game::{entity::Entity, player::Player};
+use crate::game::{entity::Entity, log::PlayerEvent, player::Player};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
@@ -24,4 +24,5 @@ pub enum Reply<'a> {
     Leaderboard(&'a Vec<Player>),
     GameInfo { day: u8, start_of_day: u64 },
     Ok,
+    Activity(Vec<PlayerEvent>),
 }

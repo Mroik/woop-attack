@@ -1,5 +1,6 @@
 use super::message::{ApiReply, Reply, Request};
 use crate::game::game::Game;
+use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::Arc;
 use std::sync::Mutex;
@@ -38,6 +39,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
     let map_game = game.clone();
     let leaderboard_game = game.clone();
     let day_game = game.clone();
+    let log_game = game.clone();
 
     let shoot_action = warp::path("shoot")
         .and(warp::body::json())
@@ -208,6 +210,19 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         }))
     });
 
+    let log_action =
+        warp::path("activity")
+            .and(warp::query::query())
+            .map(move |q: HashMap<String, usize>| {
+                let game = log_game.lock().unwrap();
+                let chunk = q.get("chunk").copied().unwrap_or(0);
+                let data = match game.logged_actions.get_chunk(chunk).get(0) {
+                    None => Vec::new(),
+                    Some(d) => d.to_vec(),
+                };
+                warp::reply::json(&ApiReply::Data(Reply::Activity(data)))
+            });
+
     let routes = warp::post()
         .and(
             shoot_action
@@ -218,7 +233,8 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 .or(build_action)
                 .or(map_action)
                 .or(leaderboard_action)
-                .or(day_action),
+                .or(day_action)
+                .or(log_action),
         )
         .recover(handle_rejection);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
