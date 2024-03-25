@@ -21,24 +21,26 @@ Basic actions:
 -------------
 
 - Combat:
-    - A player can use 4 actions to shoot another player
+    - A player can use 4 actions to shoot another player's zord
     - A player can shoot only after 3 hours from the beginning of the day
-    - A player can only shoot players within their range
+    - A player can only shoot zords within their range
     - The base range is 5 squares
     - If hit directly a zord loses a health point
     - A zord dies if they lose all lives
-    - A player can use 4 actions to build a shield
+    - A player can use 4 actions to build a shield on a zord
     - A player can build multiple shields
     - A shield is consumed when shot by another player
     - A shield lasts until the end of the day
-    - A player can use 4 actions to increase their range by one
+    - A player can use 4 actions to increase the range of a zord by one
     - At the end of the day the range returns to its base value
 - Movement:
-    - A player can use `N` action to move a zord `N` squares
+    - A player can use `N` action to move a zord they own by `N` squares
     - A zord can't move into a square occupied by another entity
 - Special actions:
     - A player can use 4 actions to donate up to 10 points to another player
     - A player can build a zord by spending 10 points and using 4 actions
+    - A zord must be built within distance of 1 of another zord owned by the
+        same player
     - A zord built using 10 points starts out with 1 health point
 
 Objectives:
