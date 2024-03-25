@@ -34,7 +34,7 @@ Basic actions:
     - A player can use 4 actions to increase their range by one
     - At the end of the day the range returns to its base value
 - Movement:
-    - A player can use an action to move a zord one square
+    - A player can use `N` action to move a zord `N` squares
     - A zord can't move into a square occupied by another entity
 - Special actions:
     - A player can use 4 actions to donate up to 10 points to another player

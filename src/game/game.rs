@@ -194,9 +194,15 @@ impl Game {
             return WoopError::not_owned(x_f, y_f);
         }
 
+        let owner = self
+            .players
+            .iter_mut()
+            .find(|o| player == o.name.as_str())
+            .unwrap();
+
         // Check if within range
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
-        if distance > 1 {
+        if distance > owner.actions as i16 {
             return WoopError::not_in_range(x_f, y_f, x_t, y_t);
         }
 
@@ -206,16 +212,10 @@ impl Game {
         }
 
         // Check if enough actions
-        let name = zord.get_zord().unwrap().owner.as_str();
-        let owner = self
-            .players
-            .iter_mut()
-            .find(|o| name == o.name.as_str())
-            .unwrap();
-        if owner.actions == 0 {
+        if (owner.actions as i16) < distance {
             return WoopError::out_of_actions();
         }
-        owner.spend_action(1);
+        owner.spend_action(distance as u8);
         if zord.move_zord(x_t, y_t) {
             self.logged_actions
                 .move_zord(player, (x_f, y_f), (x_t, y_t));
@@ -781,7 +781,7 @@ mod tests {
         let mut game = generate_game();
         let p = game.players.get(0).cloned().unwrap();
         game.create_zord(p.name.as_str(), 0, 0);
-        let success = game.move_zord("mroik", 0, 0, 2, 2);
+        let success = game.move_zord("mroik", 0, 0, 21, 2);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
