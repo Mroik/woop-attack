@@ -22,6 +22,8 @@ async fn main() {
     let args = Args::parse();
     let config = Config::read_file(args.config.as_str());
 
+    env_logger::init();
+
     let game = Arc::new(Mutex::new(Game::new(&config)));
     let scheduler_game = game.clone();
 

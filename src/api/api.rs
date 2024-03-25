@@ -220,6 +220,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 warp::reply::json(&ApiReply::Data(Reply::Activity(data)))
             });
 
+    let logger = warp::log("api::api");
     let routes = warp::post()
         .and(
             shoot_action
@@ -233,6 +234,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 .or(day_action)
                 .or(log_action),
         )
-        .recover(handle_rejection);
+        .recover(handle_rejection)
+        .with(logger);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
 }
