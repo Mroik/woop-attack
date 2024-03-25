@@ -28,7 +28,9 @@ pandoc:
   stage: build_rules_pdf
   image: pandoc/latex
   script:
-    - pandoc rules.md -o rules.pdf --metadata=title:"Woop-Attack" --metadata=author:"Mroik <mroik@delayed.space>"
+    - pandoc rules.md -o rules.pdf --metadata=title:"Woop-Attack's ruleset" --metadata=author:"Mroik <mroik@delayed.space>"
+    - pandoc api.md -o api.pdf --metadata=title:"Woop-Attack's API specifications" --metadata=author:"Mroik <mroik@delayed.space>"
   artifacts:
     paths:
       - rules.pdf
+      - api.pdf

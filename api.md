@@ -163,68 +163,68 @@ Response data:
 [
     {
         "shoot": {
-            shooter: String,
-            from: (i16, i16),
-            to: (i16, i16),
-            target: String,
-            timestamp: u64,
+            shooter: string,
+            from: [int, int],
+            to: [int, int],
+            target: string,
+            timestamp: int,
         }
     },
     {
         "move": {
-            player: String,
-            from: (i16, i16),
-            to: (i16, i16),
-            timestamp: u64,
+            player: string,
+            from: [int, int],
+            to: [int, int],
+            timestamp: int,
         }
     },
     {
         "generate-shield": {
-            player: String,
-            zord_coord: (i16, i16),
-            timestamp: u64,
+            player: string,
+            zord_coord: [int, int],
+            timestamp: int,
         }
     },
     {
         "increase-range": {
-            player: String,
-            zord_coord: (i16, i16),
-            timestamp: u64,
+            player: string,
+            zord_coord: [int, int],
+            timestamp: int,
         }
     },
     {
         "donate-points": {
-            from: String,
-            to: String,
-            timestamp: u64,
+            from: string,
+            to: string,
+            timestamp: int,
         }
     },
     {
         "build-zord": {
-            player: String,
-            zord_coord: (i16, i16),
-            timestamp: u64,
+            player: string,
+            zord_coord: [int, int],
+            timestamp: int,
         }
     },
     {
         "totem-points": {
-            player: String,
-            coord: (i16, i16),
-            points: u16,
-            timestamp: u64,
+            player: string,
+            coord: [int, int],
+            points: int,
+            timestamp: int,
         }
     },
     {
         "respawn": {
-            player: String,
-            coord: (i16, i16),
-            timestamp: u64,
+            player: string,
+            coord: [int, int],
+            timestamp: int,
         }
     },
     {
         "totem-spawned": {
-            coord: (i16, i16),
-            timestamp: u64,
+            coord: [int, int],
+            timestamp: int,
         }
     },
     ...
