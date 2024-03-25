@@ -92,25 +92,27 @@ specified coordinate.
 
 Response data:
 ```json
-{"map": [
-    {
-        "Zord": {
-            "x": int,
-            "y": int,
-            "hp": int,
-            "shields": int,
-            "range": int,
-            "owner": string,
-        }
-    },
-    {
-        "Totem": {
-            "x": int,
-            "y": int,
-        }
-    },
-    ...
-]}
+{"data":
+    {"map": [
+        {
+            "zord": {
+                "x": int,
+                "y": int,
+                "hp": int,
+                "shields": int,
+                "range": int,
+                "owner": string,
+            }
+        },
+        {
+            "totem": {
+                "x": int,
+                "y": int,
+            }
+        },
+        ...
+    ]}
+}
 ```
 
 Returns the entities present on the map. An entity can either be a `zord` or a
@@ -121,16 +123,16 @@ Returns the entities present on the map. An entity can either be a `zord` or a
 
 Response data:
 ```json
-{"leaderboard": [
-    {
-        "Player": {
+{"data":
+    {"leaderboard": [
+        {
             "name": string,
             "actions": int,
             "points": int,
-        }
-    },
-    ...
-]}
+        },
+        ...
+    ]}
+}
 ```
 
 Returns all of the player's info.
@@ -140,9 +142,11 @@ Returns all of the player's info.
 
 Response data:
 ```json
-{"game-info": {
-    "day": int,
-    "start_of_day": int,
+{"data": {
+    "game_info": {
+        "day": int,
+        "start_of_day": int,
+    }
 }}
 ```
 
@@ -160,75 +164,77 @@ Query parameters:
 
 Response data:
 ```json
-[
-    {
-        "shoot": {
-            shooter: string,
-            from: [int, int],
-            to: [int, int],
-            target: string,
-            timestamp: int,
-        }
-    },
-    {
-        "move": {
-            player: string,
-            from: [int, int],
-            to: [int, int],
-            timestamp: int,
-        }
-    },
-    {
-        "generate-shield": {
-            player: string,
-            zord_coord: [int, int],
-            timestamp: int,
-        }
-    },
-    {
-        "increase-range": {
-            player: string,
-            zord_coord: [int, int],
-            timestamp: int,
-        }
-    },
-    {
-        "donate-points": {
-            from: string,
-            to: string,
-            timestamp: int,
-        }
-    },
-    {
-        "build-zord": {
-            player: string,
-            zord_coord: [int, int],
-            timestamp: int,
-        }
-    },
-    {
-        "totem-points": {
-            player: string,
-            coord: [int, int],
-            points: int,
-            timestamp: int,
-        }
-    },
-    {
-        "respawn": {
-            player: string,
-            coord: [int, int],
-            timestamp: int,
-        }
-    },
-    {
-        "totem-spawned": {
-            coord: [int, int],
-            timestamp: int,
-        }
-    },
-    ...
-]
+{"data":
+    {"activity": [
+        {
+            "shoot": {
+                "shooter": string,
+                "from": [int, int],
+                "to": [int, int],
+                "target": string,
+                "timestamp": int,
+            }
+        },
+        {
+            "move": {
+                "player": string,
+                "from": [int, int],
+                "to": [int, int],
+                "timestamp": int,
+            }
+        },
+        {
+            "generate_shield": {
+                "player": string,
+                "zord_coord": [int, int],
+                "timestamp": int,
+            }
+        },
+        {
+            "increase_range": {
+                "player": string,
+                "zord_coord": [int, int],
+                "timestamp": int,
+            }
+        },
+        {
+            "donate_points": {
+                "from": string,
+                "to": string,
+                "timestamp": int,
+            }
+        },
+        {
+            "build_zord": {
+                "player": string,
+                "zord_coord": [int, int],
+                "timestamp": int,
+            }
+        },
+        {
+            "totem_points": {
+                "player": string,
+                "coord": [int, int],
+                "points": int,
+                "timestamp": int,
+            }
+        },
+        {
+            "respawn": {
+                "player": string,
+                "coord": [int, int],
+                "timestamp": int,
+            }
+        },
+        {
+            "totem_spawned": {
+                "coord": [int, int],
+                "timestamp": int,
+            }
+        },
+        ...
+    ]}
+}
 ```
 
 Returns the last 100 events from the activity log. To get the other events
