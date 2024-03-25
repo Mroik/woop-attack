@@ -2,7 +2,7 @@ use crate::game::{entity::Entity, log::PlayerEvent, player::Player};
 use serde::{Deserialize, Serialize};
 
 #[derive(Serialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum ApiReply<'a> {
     Error(String),
     Data(Reply<'a>),
@@ -18,7 +18,7 @@ pub enum Request {
 }
 
 #[derive(Serialize)]
-#[serde(rename_all = "lowercase")]
+#[serde(rename_all = "snake_case")]
 pub enum Reply<'a> {
     Map(&'a Vec<Entity>),
     Leaderboard(&'a Vec<Player>),

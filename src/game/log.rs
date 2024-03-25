@@ -4,6 +4,7 @@ use std::time::{SystemTime, UNIX_EPOCH};
 const ACTIVITY_CHUNK_SIZE: usize = 100;
 
 #[derive(Debug, Serialize, Clone)]
+#[serde(rename_all = "snake_case")]
 pub enum PlayerEvent {
     Shoot {
         shooter: String,

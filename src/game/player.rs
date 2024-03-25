@@ -3,6 +3,7 @@ use serde::Serialize;
 pub const BASE_ACTIONS: u8 = 20;
 
 #[derive(PartialEq, Clone, Debug, Serialize)]
+#[serde(rename_all = "snake_case")]
 pub struct Player {
     pub name: String,
     pub actions: u8,
