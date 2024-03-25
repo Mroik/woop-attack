@@ -216,10 +216,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             .map(move |q: HashMap<String, usize>| {
                 let game = log_game.lock().unwrap();
                 let chunk = q.get("chunk").copied().unwrap_or(0);
-                let data = match game.logged_actions.get_chunk(chunk).get(0) {
-                    None => Vec::new(),
-                    Some(d) => d.to_vec(),
-                };
+                let data = game.logged_actions.get_chunk(chunk);
                 warp::reply::json(&ApiReply::Data(Reply::Activity(data)))
             });
 

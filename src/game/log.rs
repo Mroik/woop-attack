@@ -1,6 +1,8 @@
 use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
 
+const ACTIVITY_CHUNK_SIZE: usize = 100;
+
 #[derive(Debug, Serialize, Clone)]
 pub enum PlayerEvent {
     Shoot {
@@ -138,9 +140,14 @@ impl Logger {
         Self { data: Vec::new() }
     }
 
-    pub fn get_chunk(&self, chunk: usize) -> Vec<&[PlayerEvent]> {
-        let ris: Vec<&[PlayerEvent]> = self.data.chunks(100).skip(chunk).take(1).collect();
-        ris
+    pub fn get_chunk(&self, chunk: usize) -> Vec<PlayerEvent> {
+        self.data
+            .iter()
+            .rev()
+            .skip(ACTIVITY_CHUNK_SIZE * chunk)
+            .take(ACTIVITY_CHUNK_SIZE)
+            .map(|e| e.clone())
+            .collect()
     }
 }
 
