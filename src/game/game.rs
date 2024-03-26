@@ -97,12 +97,9 @@ impl Game {
         }
         owner.spend_action(ACTION_COST);
 
-        if zord.zord_generate_shield() {
-            self.logged_actions.generate_shield(player, (x, y));
-            Ok(())
-        } else {
-            WoopError::generic()
-        }
+        zord.zord_generate_shield();
+        self.logged_actions.generate_shield(player, (x, y));
+        Ok(())
     }
 
     pub fn donate_points(&mut self, from: &str, to: &str, amount: u16) -> Result<(), WoopError> {
@@ -216,13 +213,10 @@ impl Game {
             return WoopError::out_of_actions();
         }
         owner.spend_action(distance as u8);
-        if zord.move_zord(x_t, y_t) {
-            self.logged_actions
-                .move_zord(player, (x_f, y_f), (x_t, y_t));
-            Ok(())
-        } else {
-            WoopError::generic()
-        }
+        zord.move_zord(x_t, y_t);
+        self.logged_actions
+            .move_zord(player, (x_f, y_f), (x_t, y_t));
+        Ok(())
     }
 
     pub fn player_shoot(
@@ -460,12 +454,9 @@ impl Game {
             return WoopError::out_of_actions();
         }
         owner.spend_action(ACTION_COST);
-        if zord.zord_increase_range() {
-            self.logged_actions.increase_range(player, (x, y));
-            Ok(())
-        } else {
-            WoopError::generic()
-        }
+        zord.zord_increase_range();
+        self.logged_actions.increase_range(player, (x, y));
+        Ok(())
     }
 
     pub fn build_zord(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {

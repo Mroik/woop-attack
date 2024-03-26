@@ -34,33 +34,24 @@ impl Entity {
         }
     }
 
-    pub fn zord_generate_shield(&mut self) -> bool {
+    pub fn zord_generate_shield(&mut self) {
         match self {
-            Entity::Zord(z) => {
-                z.generate_shield();
-                true
-            }
-            _ => false,
+            Entity::Zord(z) => z.generate_shield(),
+            _ => (),
         }
     }
 
-    pub fn zord_increase_range(&mut self) -> bool {
+    pub fn zord_increase_range(&mut self) {
         match self {
-            Entity::Zord(z) => {
-                z.increase_range();
-                true
-            }
-            _ => false,
+            Entity::Zord(z) => z.increase_range(),
+            _ => (),
         }
     }
 
-    pub fn move_zord(&mut self, x: i16, y: i16) -> bool {
+    pub fn move_zord(&mut self, x: i16, y: i16) {
         match self {
-            Entity::Zord(z) => {
-                z.set_coord(x, y);
-                true
-            }
-            _ => false,
+            Entity::Zord(z) => z.set_coord(x, y),
+            _ => (),
         }
     }
 

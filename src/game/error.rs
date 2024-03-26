@@ -12,7 +12,6 @@ pub enum WoopError {
     CellOccupied(i16, i16),
     OutOfBounds(i16, i16),
     NotInRange(i16, i16, i16, i16),
-    Generic,
     PlayerNotFound(String),
     WithinGracePeriod,
     NoZordNearby(i16, i16),
@@ -30,10 +29,6 @@ impl WoopError {
 
     pub fn zord_not_found(x: i16, y: i16) -> Result<(), WoopError> {
         Err(WoopError::ZordNotFound(x, y))
-    }
-
-    pub fn generic() -> Result<(), WoopError> {
-        Err(WoopError::Generic)
     }
 
     pub fn player_not_found(player: &str) -> Result<(), WoopError> {
@@ -98,7 +93,6 @@ impl Display for WoopError {
                 "({}, {}) is not in range of ({}, {})",
                 x_t, y_t, x_f, y_f
             ),
-            Self::Generic => write!(f, "Internal error"),
             Self::PlayerNotFound(player) => write!(f, "Couldn't find player named {}", player),
             Self::WithinGracePeriod => write!(f, "You tried shooting within the grace period"),
             Self::NoZordNearby(x, y) => write!(f, "There's no zord nearby ({}, {})", x, y),
