@@ -1,28 +1,53 @@
 use crate::game::{entity::Entity, log::PlayerEvent, player::Player};
 use serde::{Deserialize, Serialize};
+use utoipa::{IntoParams, ToSchema};
 
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum ApiReply<'a> {
+#[derive(Deserialize, Serialize, Clone, ToSchema, IntoParams)]
+pub struct DoubleCoord {
+    /// Coordinates of your own zord
+    pub from: (i16, i16),
+    /// Coordinates of target zord
+    pub to: (i16, i16),
+}
+
+#[derive(Deserialize, Serialize, Clone, ToSchema, IntoParams)]
+pub struct SingleCoord {
+    pub coord: (i16, i16),
+}
+
+#[derive(Deserialize, Serialize, Clone, ToSchema, IntoParams)]
+pub struct Donate {
+    pub receiver: String,
+    pub amount: u16,
+}
+
+#[derive(Serialize, ToSchema)]
+pub enum Empty {
     Error(String),
-    Data(Reply<'a>),
-}
-
-#[derive(Deserialize, Clone)]
-#[serde(untagged)]
-pub enum Request {
-    // Actions
-    DoubleCoord { from: (i16, i16), to: (i16, i16) },
-    SingleCoord { coord: (i16, i16) },
-    Donate { receiver: String, amount: u16 },
-}
-
-#[derive(Serialize)]
-#[serde(rename_all = "snake_case")]
-pub enum Reply<'a> {
-    Map(&'a Vec<Entity>),
-    Leaderboard(&'a Vec<Player>),
-    GameInfo { day: u8, start_of_day: u64 },
     Ok,
-    Activity(Vec<PlayerEvent>),
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct WoopMap<'a> {
+    pub map: &'a Vec<Entity>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct Leaderboard<'a> {
+    /// List of players sorted by points
+    pub leaderboard: &'a Vec<Player>,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct GameInfo {
+    /// Current game day
+    pub day: u8,
+    /// Unix timestamp of the start of the day
+    pub start_of_day: u64,
+}
+
+#[derive(Serialize, ToSchema)]
+pub struct Activity {
+    /// List of the last 100 actions
+    pub activity: Vec<PlayerEvent>,
 }

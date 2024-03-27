@@ -4,5 +4,5 @@ pub mod error;
 pub mod game;
 pub mod log;
 pub mod player;
-mod totem;
-mod zord;
+pub mod totem;
+pub mod zord;

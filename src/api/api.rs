@@ -1,28 +1,33 @@
-use super::message::{ApiReply, Reply, Request};
+use crate::api::message::{
+    Activity, Donate, DoubleCoord, GameInfo, Leaderboard, SingleCoord, WoopMap,
+};
 use crate::game::game::Game;
 use std::collections::HashMap;
 use std::convert::Infallible;
-use std::sync::Arc;
-use std::sync::Mutex;
+use std::sync::{Arc, Mutex};
 use std::time::UNIX_EPOCH;
+use utoipa::OpenApi;
+use utoipa_rapidoc::RapiDoc;
 use warp::http::StatusCode;
 use warp::reject::Rejection;
 use warp::reply::Json;
 use warp::Filter;
 use warp::Reply as WarpReply;
 
+use super::message::Empty;
+
 async fn handle_rejection(_: Rejection) -> Result<impl WarpReply, Infallible> {
     let msg = "Incorrect interaction with the api. Check method, endpoint and JSON data";
-    let json = warp::reply::json(&ApiReply::Error(String::from(msg)));
+    let json = warp::reply::json(&Empty::Error(msg.to_string()));
     Ok(warp::reply::with_status(json, StatusCode::BAD_REQUEST))
 }
 
 fn get_game_status(game: &Game) -> Result<Json, ()> {
     match game.day {
-        0 => Ok(warp::reply::json(&ApiReply::Error(
+        0 => Ok(warp::reply::json(&Empty::Error(
             "Game hasn't started yet".to_string(),
         ))),
-        29 => Ok(warp::reply::json(&ApiReply::Error(
+        29 => Ok(warp::reply::json(&Empty::Error(
             "Game has ended".to_string(),
         ))),
         _ => Err(()),
@@ -45,24 +50,20 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .and(warp::header("username"))
         .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
+        .map(move |req: DoubleCoord, username: String, pass: String| {
             let mut game = shoot_game.lock().unwrap();
             if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
+                return warp::reply::json(&Empty::Error(err.to_string()));
             }
 
             if let Ok(resp) = get_game_status(&game) {
                 return resp;
             }
-            match req {
-                Request::DoubleCoord {
-                    from: (x_f, y_f),
-                    to: (x_t, y_t),
-                } => match game.player_shoot(username.as_str(), x_f, y_f, x_t, y_t) {
-                    Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                },
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            let (x_f, y_f) = req.from;
+            let (x_t, y_t) = req.to;
+            match game.player_shoot(username.as_str(), x_f, y_f, x_t, y_t) {
+                Ok(_) => warp::reply::json(&Empty::Ok),
+                Err(err) => warp::reply::json(&Empty::Error(err.to_string())),
             }
         });
 
@@ -70,24 +71,20 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .and(warp::header("username"))
         .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
+        .map(move |req: DoubleCoord, username: String, pass: String| {
             let mut game = move_game.lock().unwrap();
             if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
+                return warp::reply::json(&Empty::Error(err.to_string()));
             }
 
             if let Ok(resp) = get_game_status(&game) {
                 return resp;
             }
-            match req {
-                Request::DoubleCoord {
-                    from: (x_f, y_f),
-                    to: (x_t, y_t),
-                } => match game.move_zord(username.as_str(), x_f, y_f, x_t, y_t) {
-                    Ok(_) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                    Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                },
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            let (x_f, y_f) = req.from;
+            let (x_t, y_t) = req.to;
+            match game.move_zord(username.as_str(), x_f, y_f, x_t, y_t) {
+                Ok(_) => warp::reply::json(&Empty::Ok),
+                Err(err) => warp::reply::json(&Empty::Error(err.to_string())),
             }
         });
 
@@ -95,23 +92,19 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .and(warp::header("username"))
         .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
+        .map(move |req: SingleCoord, username: String, pass: String| {
             let mut game = shield_game.lock().unwrap();
             if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
+                return warp::reply::json(&Empty::Error(err.to_string()));
             }
 
             if let Ok(resp) = get_game_status(&game) {
                 return resp;
             }
-            match req {
-                Request::SingleCoord { coord: (x, y) } => {
-                    match game.generate_shield(username.as_str(), x, y) {
-                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                    }
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            let (x, y) = req.coord;
+            match game.generate_shield(username.as_str(), x, y) {
+                Ok(()) => warp::reply::json(&Empty::Ok),
+                Err(err) => warp::reply::json(&Empty::Error(err.to_string())),
             }
         });
 
@@ -119,23 +112,19 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .and(warp::header("username"))
         .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
+        .map(move |req: SingleCoord, username: String, pass: String| {
             let mut game = increase_game.lock().unwrap();
             if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
+                return warp::reply::json(&Empty::Error(err.to_string()));
             }
 
             if let Ok(resp) = get_game_status(&game) {
                 return resp;
             }
-            match req {
-                Request::SingleCoord { coord: (x, y) } => {
-                    match game.increase_range(username.as_str(), x, y) {
-                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                    }
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            let (x, y) = req.coord;
+            match game.increase_range(username.as_str(), x, y) {
+                Ok(()) => warp::reply::json(&Empty::Ok),
+                Err(err) => warp::reply::json(&Empty::Error(err.to_string())),
             }
         });
 
@@ -143,23 +132,18 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .and(warp::header("username"))
         .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
+        .map(move |req: Donate, username: String, pass: String| {
             let mut game = donate_game.lock().unwrap();
             if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
+                return warp::reply::json(&Empty::Error(err.to_string()));
             }
 
             if let Ok(resp) = get_game_status(&game) {
                 return resp;
             }
-            match req {
-                Request::Donate { receiver, amount } => {
-                    match game.donate_points(username.as_str(), receiver.as_str(), amount) {
-                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                    }
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            match game.donate_points(username.as_str(), req.receiver.as_str(), req.amount) {
+                Ok(()) => warp::reply::json(&Empty::Ok),
+                Err(err) => warp::reply::json(&Empty::Error(err.to_string())),
             }
         });
 
@@ -167,47 +151,47 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::body::json())
         .and(warp::header("username"))
         .and(warp::header("token"))
-        .map(move |req: Request, username: String, pass: String| {
+        .map(move |req: SingleCoord, username: String, pass: String| {
             let mut game = build_game.lock().unwrap();
             if let Err(err) = game.authenticate(username.as_str(), pass.as_str()) {
-                return warp::reply::json(&ApiReply::Error(err.to_string()));
+                return warp::reply::json(&Empty::Error(err.to_string()));
             }
 
             if let Ok(resp) = get_game_status(&game) {
                 return resp;
             }
-            match req {
-                Request::SingleCoord { coord: (x, y) } => {
-                    match game.build_zord(username.as_str(), x, y) {
-                        Ok(()) => warp::reply::json(&ApiReply::Data(Reply::Ok)),
-                        Err(err) => warp::reply::json(&ApiReply::Error(err.to_string())),
-                    }
-                }
-                _ => warp::reply::json(&ApiReply::Error(String::from("Wrong JSON data"))),
+            let (x, y) = req.coord;
+            match game.build_zord(username.as_str(), x, y) {
+                Ok(()) => warp::reply::json(&Empty::Ok),
+                Err(err) => warp::reply::json(&Empty::Error(err.to_string())),
             }
         });
 
     let map_action = warp::path("map").map(move || {
         let game = map_game.lock().unwrap();
-        warp::reply::json(&ApiReply::Data(Reply::Map(&game.board.board)))
+        warp::reply::json(&WoopMap {
+            map: &game.board.board,
+        })
     });
 
     let leaderboard_action = warp::path("leaderboard").map(move || {
         let game = leaderboard_game.lock().unwrap();
-        warp::reply::json(&ApiReply::Data(Reply::Leaderboard(&game.players)))
+        warp::reply::json(&Leaderboard {
+            leaderboard: &game.players,
+        })
     });
 
     let day_action = warp::path("day").map(move || {
         let game = day_game.lock().unwrap();
 
-        warp::reply::json(&ApiReply::Data(Reply::GameInfo {
+        warp::reply::json(&GameInfo {
             day: game.day,
             start_of_day: game
                 .start_of_day
                 .duration_since(UNIX_EPOCH)
                 .unwrap()
                 .as_secs(),
-        }))
+        })
     });
 
     let log_action =
@@ -217,8 +201,46 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 let game = log_game.lock().unwrap();
                 let chunk = q.get("chunk").copied().unwrap_or(0);
                 let data = game.logged_actions.get_chunk(chunk);
-                warp::reply::json(&ApiReply::Data(Reply::Activity(data)))
+                warp::reply::json(&Activity { activity: data })
             });
+
+    #[derive(OpenApi)]
+    #[openapi(
+        paths(
+            crate::api::docs::shoot,
+            crate::api::docs::move_,
+            crate::api::docs::shield,
+            crate::api::docs::increase_range,
+            crate::api::docs::donate_points,
+            crate::api::docs::build_zord,
+            crate::api::docs::get_board_data,
+            crate::api::docs::get_day,
+            crate::api::docs::get_activity,
+        ),
+        components(schemas(
+            crate::game::entity::Entity,
+            crate::game::zord::Zord,
+            crate::game::totem::Totem,
+            crate::game::player::Player,
+            crate::api::message::DoubleCoord,
+            crate::api::message::SingleCoord,
+            crate::api::message::Donate,
+            crate::api::message::WoopMap,
+            crate::api::message::Leaderboard,
+            crate::api::message::GameInfo,
+            crate::api::message::Activity,
+            crate::api::message::Empty,
+            crate::game::log::PlayerEvent,
+        ))
+    )]
+    struct ApiDoc;
+
+    let docs = warp::path("docs")
+        .and(warp::get())
+        .map(|| warp::reply::json(&ApiDoc::openapi()));
+    let rapidoc = warp::path("rapidoc")
+        .and(warp::get())
+        .map(|| warp::reply::html(RapiDoc::new("/docs").to_html()));
 
     let logger = warp::log("api::api");
     let routes = warp::post()
@@ -234,6 +256,8 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 .or(day_action)
                 .or(log_action),
         )
+        .or(docs)
+        .or(rapidoc)
         .recover(handle_rejection)
         .with(logger);
     warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;

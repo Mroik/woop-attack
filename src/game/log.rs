@@ -1,9 +1,10 @@
 use serde::Serialize;
 use std::time::{SystemTime, UNIX_EPOCH};
+use utoipa::ToSchema;
 
 const ACTIVITY_CHUNK_SIZE: usize = 100;
 
-#[derive(Debug, Serialize, Clone)]
+#[derive(Debug, Serialize, Clone, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum PlayerEvent {
     Shoot {
