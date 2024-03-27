@@ -1,7 +1,8 @@
 use super::{totem::Totem, zord::Zord};
 use serde::Serialize;
+use utoipa::ToSchema;
 
-#[derive(Debug, Serialize)]
+#[derive(Debug, Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub enum Entity {
     Zord(Zord),

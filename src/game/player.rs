@@ -1,8 +1,9 @@
 use serde::Serialize;
+use utoipa::ToSchema;
 
 pub const BASE_ACTIONS: u8 = 20;
 
-#[derive(PartialEq, Clone, Debug, Serialize)]
+#[derive(PartialEq, Clone, Debug, Serialize, ToSchema)]
 #[serde(rename_all = "snake_case")]
 pub struct Player {
     pub name: String,
