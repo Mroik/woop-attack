@@ -453,7 +453,7 @@ impl Game {
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
-        owner.spend_action(ACTION_COST);
+        owner.spend_action(ACTION_COST / 2);
         zord.zord_increase_range();
         self.logged_actions.increase_range(player, (x, y));
         Ok(())
