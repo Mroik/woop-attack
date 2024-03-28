@@ -32,7 +32,7 @@ Basic actions:
     - A player can build multiple shields
     - A shield is consumed when shot by another player
     - A shield lasts until the end of the day
-    - A player can use 4 actions to increase the range of a zord by one
+    - A player can use 2 actions to increase the range of a zord by one
     - At the end of the day the range returns to its base value
 - Movement:
     - A player can use `N` action to move a zord they own by `N` squares
@@ -51,7 +51,7 @@ Objectives:
 - At the end of the day the totem awards 50 points distributed equally among the
     players based on the zords in the totem area
 
-Tecnicalities
+Technicalities
 ============
 
 - Every player can see the amount of active shields everyone has
