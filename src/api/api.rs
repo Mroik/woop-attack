@@ -216,6 +216,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             crate::api::docs::get_board_data,
             crate::api::docs::get_day,
             crate::api::docs::get_activity,
+            crate::api::docs::leaderboard,
         ),
         components(schemas(
             crate::game::entity::Entity,
