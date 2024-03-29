@@ -394,18 +394,21 @@ impl Game {
         }
     }
 
+    // Spawning totems before players gives a more interesting map disposition (this given the fact
+    // that we also include totems in the algorithm to choose the spawn point for the players)
     pub fn new_day(&mut self) {
         // Set new day
         self.start_of_day = SystemTime::now();
         self.day += 1;
 
         self.give_out_totem_points();
-        self.respawn_players();
 
         // Spawn totems at the beginning of the week
         if self.day % 7 == 1 {
             self.spawn_totems();
         }
+
+        self.respawn_players();
 
         // Reset actions
         self.players
@@ -521,10 +524,12 @@ impl Game {
             .board
             .board
             .iter()
-            .filter(|z| z.is_zord())
-            .map(|z| {
-                let zord = z.get_zord().unwrap();
-                (zord.x, zord.y)
+            .map(|entity| {
+                let coord = match entity {
+                    Entity::Zord(z) => (z.x, z.y),
+                    Entity::Totem(t) => (t.x, t.y),
+                };
+                coord
             })
             .collect();
 
