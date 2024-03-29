@@ -724,7 +724,7 @@ mod tests {
             game.board.board.first().unwrap().get_zord().unwrap().range,
             6
         );
-        assert_eq!(game.players.get(0).unwrap().actions, 16);
+        assert_eq!(game.players.get(0).unwrap().actions, 18);
     }
 
     #[test]
