@@ -1,4 +1,37 @@
 use crate::api::message::{Donate, DoubleCoord, SingleCoord};
+use utoipa::OpenApi;
+
+#[derive(OpenApi)]
+#[openapi(
+    paths(
+        crate::api::docs::shoot,
+        crate::api::docs::move_,
+        crate::api::docs::shield,
+        crate::api::docs::increase_range,
+        crate::api::docs::donate_points,
+        crate::api::docs::build_zord,
+        crate::api::docs::get_board_data,
+        crate::api::docs::get_day,
+        crate::api::docs::get_activity,
+        crate::api::docs::leaderboard,
+    ),
+    components(schemas(
+        crate::game::entity::Entity,
+        crate::game::zord::Zord,
+        crate::game::totem::Totem,
+        crate::game::player::Player,
+        crate::api::message::DoubleCoord,
+        crate::api::message::SingleCoord,
+        crate::api::message::Donate,
+        crate::api::message::WoopMap,
+        crate::api::message::Leaderboard,
+        crate::api::message::GameInfo,
+        crate::api::message::Activity,
+        crate::api::message::Empty,
+        crate::game::log::PlayerEvent,
+    ))
+)]
+pub struct ApiDoc;
 
 /// Shoot a zord with your own
 #[allow(dead_code)]

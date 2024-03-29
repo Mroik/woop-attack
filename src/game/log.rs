@@ -1,5 +1,5 @@
 use serde::Serialize;
-use std::time::{SystemTime, UNIX_EPOCH};
+use std::time::UNIX_EPOCH;
 use utoipa::ToSchema;
 
 const ACTIVITY_CHUNK_SIZE: usize = 100;
@@ -148,11 +148,11 @@ impl Logger {
             .rev()
             .skip(ACTIVITY_CHUNK_SIZE * chunk)
             .take(ACTIVITY_CHUNK_SIZE)
-            .map(|e| e.clone())
+            .cloned()
             .collect()
     }
 }
 
 fn unix_timestamp() -> u64 {
-    SystemTime::from(UNIX_EPOCH).elapsed().unwrap().as_secs()
+    UNIX_EPOCH.elapsed().unwrap().as_secs()
 }

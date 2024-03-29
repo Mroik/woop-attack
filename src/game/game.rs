@@ -20,6 +20,7 @@ const KILL_REWARD: u16 = 3;
 const TOTEM_AURA: u16 = 5;
 const TOTEM_REWARD: u16 = 50;
 const ACTION_COST: u8 = 4;
+const MAX_DONATION_PER_ACTION: u16 = 10;
 
 #[derive(Debug)]
 pub struct Game {
@@ -69,16 +70,15 @@ impl Game {
 
     pub fn generate_shield(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if zord in cell
-        let zord = self
+        let zord = match self
             .board
             .board
             .iter_mut()
-            .find(|entity| entity.is_coord(x, y) && entity.is_zord());
-        if zord.is_none() {
-            return WoopError::zord_not_found(x, y);
-        }
-
-        let zord = zord.unwrap();
+            .find(|entity| entity.is_coord(x, y) && entity.is_zord())
+        {
+            None => return WoopError::zord_not_found(x, y),
+            Some(z) => z,
+        };
 
         // Check if own zord
         if zord.get_zord().unwrap().owner.as_str() != player {
@@ -104,23 +104,21 @@ impl Game {
 
     pub fn donate_points(&mut self, from: &str, to: &str, amount: u16) -> Result<(), WoopError> {
         // Limit donations to 10 points
-        if amount > 10 {
+        if amount > MAX_DONATION_PER_ACTION {
             return WoopError::donation_limit();
         }
 
         // Target exist
-        if !self.players.iter().any(|p| p.name == to) {
+        if !self.players.iter().any(|p| p.name.as_str() == to) {
             return WoopError::player_not_found(to);
         }
 
         // Source exist
-        let from_p = self.players.iter_mut().find(|p| p.name == from);
-        if from_p.is_none() {
-            return WoopError::player_not_found(from);
-        }
+        let pf = match self.players.iter_mut().find(|p| p.name == from) {
+            None => return WoopError::player_not_found(from),
+            Some(p) => p,
+        };
 
-        // Has enough points
-        let pf = from_p.unwrap();
         if amount > pf.points {
             return WoopError::not_enough_points(pf.points, amount);
         }
@@ -176,15 +174,15 @@ impl Game {
         }
 
         // Check if zord in cell
-        let zord = self
+        let zord = match self
             .board
             .board
             .iter_mut()
-            .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord());
-        if zord.is_none() {
-            return WoopError::zord_not_found(x_f, y_f);
-        }
-        let zord = zord.unwrap();
+            .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord())
+        {
+            None => return WoopError::zord_not_found(x_f, y_f),
+            Some(z) => z,
+        };
 
         // Check if own zord
         if zord.get_zord().unwrap().owner.as_str() != player {
@@ -228,16 +226,15 @@ impl Game {
         y_t: i16,
     ) -> Result<(), WoopError> {
         // Check if zord in cell
-        let zord = self
+        let zord = match self
             .board
             .board
             .iter_mut()
-            .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord());
-        if zord.is_none() {
-            return WoopError::zord_not_found(x_f, y_f);
-        }
-
-        let zord = zord.unwrap().get_zord().unwrap();
+            .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord())
+        {
+            None => return WoopError::zord_not_found(x_f, y_f),
+            Some(z) => z.get_zord().unwrap(),
+        };
 
         // Check if own zord
         if zord.owner != player {
@@ -320,8 +317,7 @@ impl Game {
             if !entity.is_zord() {
                 return true;
             }
-            let zord = entity.get_zord().unwrap();
-            zord.hp > 0
+            entity.get_zord().unwrap().hp > 0
         });
     }
 
@@ -332,48 +328,48 @@ impl Game {
     }
 
     fn give_out_totem_points(&mut self) {
-        let totems = self.board.board.iter().filter(|t| !t.is_zord()).map(|t| {
-            let tot = t.get_totem().unwrap();
-            (tot.x, tot.y)
-        });
+        self.board
+            .board
+            .iter()
+            .filter(|t| !t.is_zord())
+            .map(|t| t.get_totem().unwrap())
+            .for_each(|totem| {
+                let mut in_bounds = HashMap::new();
+                let mut total = 0;
+                self.board
+                    .board
+                    .iter()
+                    .filter(|z| z.is_zord())
+                    .map(|z| z.get_zord().unwrap())
+                    .for_each(|z| {
+                        if (totem.x - z.x).abs().max((totem.y - z.y).abs()) <= TOTEM_AURA as i16 {
+                            match in_bounds.get(z.owner.as_str()) {
+                                None => in_bounds.insert(z.owner.clone(), 1),
+                                Some(v) => in_bounds.insert(z.owner.clone(), v + 1),
+                            };
+                            total += 1;
+                        }
+                    });
 
-        for (x_t, y_t) in totems {
-            let mut in_bounds = HashMap::new();
-            let mut total = 0;
-            self.board
-                .board
-                .iter()
-                .filter(|z| z.is_zord())
-                .map(|z| z.get_zord().unwrap())
-                .for_each(|z| {
-                    if (x_t - z.x).abs().max((y_t - z.y).abs()) <= TOTEM_AURA as i16 {
-                        match in_bounds.get(z.owner.as_str()) {
-                            None => in_bounds.insert(z.owner.clone(), 1),
-                            Some(v) => in_bounds.insert(z.owner.clone(), v + 1),
-                        };
-                        total += 1;
-                    }
-                });
-
-            for player in in_bounds.keys() {
-                let many = in_bounds.get(player).unwrap();
-                let p = self.players.iter_mut().find(|p| p.name == *player).unwrap();
-                p.points += TOTEM_REWARD / total * many;
-                self.logged_actions.totem_points(
-                    player.as_str(),
-                    (x_t, y_t),
-                    TOTEM_REWARD / total * many,
-                );
-            }
-        }
+                for player in in_bounds.keys() {
+                    let many = in_bounds.get(player).unwrap();
+                    let p = self.players.iter_mut().find(|p| p.name == *player).unwrap();
+                    p.points += TOTEM_REWARD / total * many;
+                    self.logged_actions.totem_points(
+                        player.as_str(),
+                        (totem.x, totem.y),
+                        TOTEM_REWARD / total * many,
+                    );
+                }
+            });
     }
 
     fn respawn_players(&mut self) {
         let mut rng = thread_rng();
         let mut players = HashMap::new();
-        for player in self.players.iter() {
+        self.players.iter().for_each(|player| {
             players.insert(String::from(player.name.as_str()), 0);
-        }
+        });
 
         self.board
             .board
@@ -427,24 +423,24 @@ impl Game {
 
     pub fn increase_range(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if zord in cell
-        let zord = self
+        let zord = match self
             .board
             .board
             .iter_mut()
-            .find(|entity| entity.is_coord(x, y) && entity.is_zord());
-        if zord.is_none() {
-            return WoopError::zord_not_found(x, y);
-        }
-
-        let zord = zord.unwrap();
+            .find(|entity| entity.is_coord(x, y) && entity.is_zord())
+        {
+            None => return WoopError::zord_not_found(x, y),
+            Some(Entity::Zord(z)) => z,
+            _ => unreachable!(),
+        };
 
         // Check if own zord
-        if zord.get_zord().unwrap().owner.as_str() != player {
+        if zord.owner.as_str() != player {
             return WoopError::not_owned(x, y);
         }
 
         // Check if enough actions
-        let name = zord.get_zord().unwrap().owner.as_str();
+        let name = zord.owner.as_str();
         let owner = self
             .players
             .iter_mut()
@@ -454,7 +450,7 @@ impl Game {
             return WoopError::out_of_actions();
         }
         owner.spend_action(ACTION_COST / 2);
-        zord.zord_increase_range();
+        zord.increase_range();
         self.logged_actions.increase_range(player, (x, y));
         Ok(())
     }
@@ -489,12 +485,15 @@ impl Game {
             return WoopError::not_enough_points(p.unwrap().points, NEW_ZORD_COST);
         }
 
-        let p = self.players.iter_mut().find(|p| p.name == player).unwrap();
+        let p = self
+            .players
+            .iter_mut()
+            .find(|p| p.name.as_str() == player)
+            .unwrap();
         p.spend_action(ACTION_COST);
         p.points -= NEW_ZORD_COST;
-        self.board
-            .board
-            .push(Entity::Zord(Zord::new(p.name.as_str(), x, y)));
+        self.create_zord(player, x, y);
+        self.board.board.last_mut().unwrap().zord_hit();
 
         self.logged_actions.build_zord(player, (x, y));
         Ok(())
@@ -510,7 +509,7 @@ impl Game {
         Ok(())
     }
 
-    /// This is very slow for bigger boards
+    // This is very slow for bigger boards
     fn calculate_respawn_coordinates(&self) -> (i16, i16) {
         let mut ris = (0, 0);
         let mut r_dis = 0;
@@ -561,8 +560,8 @@ impl Game {
             let m = (y_c - y_t) / (x_c - x_t);
             let q = y_t - (m * x_t);
             let f = |x: f32| x * m + q;
-            let diff = (x_c - x_t).abs();
 
+            let diff = (x_c - x_t).abs();
             let t1 = ((x_c - diff) as i16, f(x_c - diff) as i16);
             let t2 = ((x_c + diff) as i16, f(x_c + diff) as i16);
 

@@ -1,3 +1,5 @@
+use super::docs::ApiDoc;
+use super::message::Empty;
 use crate::api::message::{
     Activity, Donate, DoubleCoord, GameInfo, Leaderboard, SingleCoord, WoopMap,
 };
@@ -13,8 +15,6 @@ use warp::reject::Rejection;
 use warp::reply::Json;
 use warp::Filter;
 use warp::Reply as WarpReply;
-
-use super::message::Empty;
 
 async fn handle_rejection(_: Rejection) -> Result<impl WarpReply, Infallible> {
     let msg = "Incorrect interaction with the api. Check method, endpoint and JSON data";
@@ -203,38 +203,6 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 let data = game.logged_actions.get_chunk(chunk);
                 warp::reply::json(&Activity { activity: data })
             });
-
-    #[derive(OpenApi)]
-    #[openapi(
-        paths(
-            crate::api::docs::shoot,
-            crate::api::docs::move_,
-            crate::api::docs::shield,
-            crate::api::docs::increase_range,
-            crate::api::docs::donate_points,
-            crate::api::docs::build_zord,
-            crate::api::docs::get_board_data,
-            crate::api::docs::get_day,
-            crate::api::docs::get_activity,
-            crate::api::docs::leaderboard,
-        ),
-        components(schemas(
-            crate::game::entity::Entity,
-            crate::game::zord::Zord,
-            crate::game::totem::Totem,
-            crate::game::player::Player,
-            crate::api::message::DoubleCoord,
-            crate::api::message::SingleCoord,
-            crate::api::message::Donate,
-            crate::api::message::WoopMap,
-            crate::api::message::Leaderboard,
-            crate::api::message::GameInfo,
-            crate::api::message::Activity,
-            crate::api::message::Empty,
-            crate::game::log::PlayerEvent,
-        ))
-    )]
-    struct ApiDoc;
 
     let docs = warp::path("docs")
         .and(warp::get())
