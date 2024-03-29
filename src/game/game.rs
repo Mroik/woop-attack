@@ -558,7 +558,7 @@ impl Game {
                 continue;
             }
 
-            let m = ((y_c - y_t).abs()) / ((x_c - x_t).abs());
+            let m = (y_c - y_t) / (x_c - x_t);
             let q = y_t - (m * x_t);
             let f = |x: f32| x * m + q;
             let diff = (x_c - x_t).abs();
