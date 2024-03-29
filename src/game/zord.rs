@@ -28,10 +28,9 @@ impl Zord {
     }
 
     pub fn hit(&mut self) -> bool {
-        if self.shields > 0 {
-            self.shields -= 1;
-        } else {
-            self.hp -= 1;
+        match self.shields {
+            0 => self.hp -= 1,
+            _ => self.shields -= 1,
         }
         self.hp == 0
     }

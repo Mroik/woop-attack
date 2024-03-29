@@ -36,23 +36,14 @@ impl Entity {
     }
 
     pub fn zord_generate_shield(&mut self) {
-        match self {
-            Entity::Zord(z) => z.generate_shield(),
-            _ => (),
-        }
-    }
-
-    pub fn zord_increase_range(&mut self) {
-        match self {
-            Entity::Zord(z) => z.increase_range(),
-            _ => (),
+        if let Entity::Zord(z) = self {
+            z.generate_shield();
         }
     }
 
     pub fn move_zord(&mut self, x: i16, y: i16) {
-        match self {
-            Entity::Zord(z) => z.set_coord(x, y),
-            _ => (),
+        if let Entity::Zord(z) = self {
+            z.set_coord(x, y);
         }
     }
 
