@@ -4,6 +4,7 @@ use crate::api::message::{
     Activity, Donate, DoubleCoord, GameInfo, Leaderboard, SingleCoord, WoopMap,
 };
 use crate::game::game::Game;
+use crate::game::player::Player;
 use std::collections::HashMap;
 use std::convert::Infallible;
 use std::sync::{Arc, Mutex};
@@ -176,9 +177,10 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
 
     let leaderboard_action = warp::path("leaderboard").map(move || {
         let game = leaderboard_game.lock().unwrap();
-        warp::reply::json(&Leaderboard {
-            leaderboard: &game.players,
-        })
+        let mut lead: Vec<&Player> = game.players.values().collect();
+        lead.sort_by_key(|p| p.points);
+        lead.reverse();
+        warp::reply::json(&Leaderboard { leaderboard: &lead })
     });
 
     let day_action = warp::path("day").map(move || {

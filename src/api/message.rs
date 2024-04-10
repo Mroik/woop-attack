@@ -35,7 +35,7 @@ pub struct WoopMap<'a> {
 #[derive(Serialize, ToSchema)]
 pub struct Leaderboard<'a> {
     /// List of players sorted by points
-    pub leaderboard: &'a Vec<Player>,
+    pub leaderboard: &'a Vec<&'a Player>,
 }
 
 #[derive(Serialize, ToSchema)]

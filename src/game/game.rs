@@ -24,7 +24,7 @@ const MAX_DONATION_PER_ACTION: u16 = 10;
 
 #[derive(Debug)]
 pub struct Game {
-    pub players: Vec<Player>,
+    pub players: HashMap<String, Player>,
     pub board: Board,
     pub start_of_day: SystemTime,
     pub day: u8,
@@ -34,15 +34,15 @@ pub struct Game {
 
 impl Game {
     pub fn new(config: &Config) -> Self {
-        let players: Vec<Player> = config
+        let players: HashMap<String, Player> = config
             .players
             .iter()
-            .map(|name| Player::new(name))
+            .map(|name| (name.clone(), Player::new(name)))
             .collect();
 
         let mut rng = rand::thread_rng();
         let mut auth = HashMap::new();
-        players.iter().for_each(|p| {
+        players.iter().for_each(|(_, p)| {
             let mut hasher = Sha256::new();
             hasher.update(rng.gen::<[u8; 32]>());
             let data = hasher.finalize().to_vec();
@@ -87,11 +87,7 @@ impl Game {
 
         // Check if enough actions
         let name = zord.get_zord().unwrap().owner.as_str();
-        let owner = self
-            .players
-            .iter_mut()
-            .find(|o| name == o.name.as_str())
-            .unwrap();
+        let owner = self.players.get_mut(name).unwrap();
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
@@ -109,12 +105,12 @@ impl Game {
         }
 
         // Target exist
-        if !self.players.iter().any(|p| p.name.as_str() == to) {
+        if self.players.get(to).is_none() {
             return WoopError::player_not_found(to);
         }
 
         // Source exist
-        let pf = match self.players.iter_mut().find(|p| p.name == from) {
+        let pf = match self.players.get_mut(from) {
             None => return WoopError::player_not_found(from),
             Some(p) => p,
         };
@@ -153,7 +149,7 @@ impl Game {
         pf.spend_action(ACTION_COST);
 
         pf.points -= amount;
-        let pt = self.players.iter_mut().find(|p| p.name == to).unwrap();
+        let pt = self.players.get_mut(to).unwrap();
         pt.points += amount;
 
         self.logged_actions.donate_points(from, to);
@@ -189,11 +185,7 @@ impl Game {
             return WoopError::not_owned(x_f, y_f);
         }
 
-        let owner = self
-            .players
-            .iter_mut()
-            .find(|o| player == o.name.as_str())
-            .unwrap();
+        let owner = self.players.get_mut(player).unwrap();
 
         // Check if within range
         let distance = (x_f - x_t).abs().max((y_f - y_t).abs());
@@ -255,11 +247,7 @@ impl Game {
         }
 
         // Check if enough actions
-        let owner = self
-            .players
-            .iter_mut()
-            .find(|o| zord.owner == o.name.as_str())
-            .unwrap();
+        let owner = self.players.get_mut(player).unwrap();
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
@@ -280,10 +268,8 @@ impl Game {
 
         // Shoot and cleanup
         let mut t_name = String::new();
-        let mut should_sort = false;
         if target.zord_hit() {
             owner.points += KILL_REWARD;
-            should_sort = true;
             t_name = target.get_zord().unwrap().owner.clone();
         }
         let target = target.get_zord().unwrap().owner.clone();
@@ -297,13 +283,8 @@ impl Game {
             .count()
             > 0;
         if !t_name.is_empty() && !has_zords {
-            let t_player = self.players.iter_mut().find(|p| p.name == t_name).unwrap();
+            let t_player = self.players.get_mut(&t_name).unwrap();
             t_player.points = t_player.points * 2 / 3;
-        }
-
-        if should_sort {
-            self.players.sort_by_key(|p| p.points);
-            self.players.reverse();
         }
 
         self.logged_actions
@@ -353,7 +334,7 @@ impl Game {
 
                 for player in in_bounds.keys() {
                     let many = in_bounds.get(player).unwrap();
-                    let p = self.players.iter_mut().find(|p| p.name == *player).unwrap();
+                    let p = self.players.get_mut(player).unwrap();
                     p.points += TOTEM_REWARD / total * many;
                     self.logged_actions.totem_points(
                         player.as_str(),
@@ -366,10 +347,11 @@ impl Game {
 
     fn respawn_players(&mut self) {
         let mut rng = thread_rng();
-        let mut players = HashMap::new();
-        self.players.iter().for_each(|player| {
-            players.insert(String::from(player.name.as_str()), 0);
-        });
+        let mut players: HashMap<String, i32> = self
+            .players
+            .iter()
+            .map(|(name, _)| (name.clone(), 0))
+            .collect();
 
         self.board
             .board
@@ -413,7 +395,7 @@ impl Game {
         // Reset actions
         self.players
             .iter_mut()
-            .for_each(|player| player.actions = BASE_ACTIONS);
+            .for_each(|(_, player)| player.actions = BASE_ACTIONS);
 
         // Remove shields and reset range
         self.board.board.iter_mut().for_each(|entity| {
@@ -443,15 +425,11 @@ impl Game {
         }
 
         // Check if enough actions
-        let name = zord.owner.as_str();
-        let owner = self
-            .players
-            .iter_mut()
-            .find(|o| name == o.name.as_str())
-            .unwrap();
+        let owner = self.players.get_mut(player).unwrap();
         if owner.actions == 0 {
             return WoopError::out_of_actions();
         }
+
         owner.spend_action(ACTION_COST / 2);
         zord.increase_range();
         self.logged_actions.increase_range(player, (x, y));
@@ -473,12 +451,12 @@ impl Game {
         if self
             .players
             .iter()
-            .any(|p| p.name == player && p.actions == 0)
+            .any(|(_, p)| p.name == player && p.actions == 0)
         {
             return WoopError::out_of_actions();
         }
 
-        let p = self.players.iter().find(|p| p.name == player);
+        let p = self.players.get(player);
         if p.is_none() {
             return WoopError::player_not_found(player);
         }
@@ -488,11 +466,7 @@ impl Game {
             return WoopError::not_enough_points(p.unwrap().points, NEW_ZORD_COST);
         }
 
-        let p = self
-            .players
-            .iter_mut()
-            .find(|p| p.name.as_str() == player)
-            .unwrap();
+        let p = self.players.get_mut(player).unwrap();
         p.spend_action(ACTION_COST);
         p.points -= NEW_ZORD_COST;
         self.create_zord(player, x, y);
@@ -615,7 +589,7 @@ mod tests {
     #[test]
     fn new_game() {
         let game = generate_game();
-        for x in game.players {
+        for (_, x) in game.players {
             assert!(["mroik", "fin", "warden"].contains(&x.name.as_str()));
         }
     }
@@ -629,17 +603,12 @@ mod tests {
             .unwrap();
         game.create_zord("mroik", 0, 0);
         game.create_zord("fin", 1, 1);
-        game.players
-            .iter_mut()
-            .find(|p| p.name.as_str() == "fin")
-            .unwrap()
-            .points = 100;
+        game.players.get_mut("fin").unwrap().points = 100;
         let _ = game.player_shoot("mroik", 0, 0, 1, 1);
         let success = game.player_shoot("mroik", 0, 0, 1, 1);
 
-        // Inverted since it is sorted on kill
-        let t_points = game.players.get(0).unwrap().points;
-        let points = game.players.get(1).unwrap().points;
+        let points = game.players.get("mroik").unwrap().points;
+        let t_points = game.players.get("fin").unwrap().points;
         assert!(success.is_ok());
         assert_eq!(game.board.board.len(), 1);
         assert_eq!(points, 3);
@@ -649,51 +618,43 @@ mod tests {
     #[test]
     fn shoot_during_grace_period() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 1, 1);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 1, 1);
         let _ = game.player_shoot("mroik", 0, 0, 1, 1);
         let success = game.player_shoot("mroik", 0, 0, 1, 1);
         assert!(success.is_err());
         assert_eq!(game.board.board.len(), 2);
-        assert_eq!(p.points, 0);
+        assert_eq!(game.players.get("mroik").unwrap().points, 0);
     }
 
     #[test]
     fn shoot_and_out_of_range() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 10, 10);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 10, 10);
         let success = game.player_shoot("mroik", 0, 0, 10, 10);
         assert!(success.is_err());
-        assert_eq!(p.points, 0);
+        assert_eq!(game.players.get("mroik").unwrap().points, 0);
     }
 
     #[test]
     fn shoot_but_not_found() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 1, 1);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 1, 1);
         let success = game.player_shoot("mroik", 2, 2, 0, 0);
         assert!(success.is_err());
-        assert_eq!(p.points, 0);
+        assert_eq!(game.players.get("mroik").unwrap().points, 0);
     }
 
     #[test]
     fn shoot_but_not_owned() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 1, 1);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 1, 1);
         let success = game.player_shoot("fin", 0, 0, 1, 1);
         assert!(success.is_err());
-        assert_eq!(p.points, 0);
+        assert_eq!(game.players.get("fin").unwrap().points, 0);
     }
 
     #[test]
@@ -728,7 +689,7 @@ mod tests {
             game.board.board.first().unwrap().get_zord().unwrap().range,
             6
         );
-        assert_eq!(game.players.get(0).unwrap().actions, 18);
+        assert_eq!(game.players.get("mroik").unwrap().actions, 18);
     }
 
     #[test]
@@ -741,7 +702,7 @@ mod tests {
         game.new_day();
         let zord = game.board.board.first().unwrap().get_zord().unwrap();
         assert_eq!(game.day, 2);
-        assert_eq!(game.players.get(0).unwrap().actions, BASE_ACTIONS);
+        assert_eq!(game.players.get("mroik").unwrap().actions, BASE_ACTIONS);
         assert_eq!(zord.range, BASE_RANGE);
         assert_eq!(zord.shields, 0);
         assert_eq!(game.board.board.iter().filter(|z| z.is_zord()).count(), 3);
@@ -762,8 +723,7 @@ mod tests {
     #[test]
     fn move_zord_out_of_bounds() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
+        game.create_zord("mroik", 0, 0);
         let success = game.move_zord("mroik", 0, 0, -1, -1);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
@@ -774,8 +734,7 @@ mod tests {
     #[test]
     fn move_zord_out_of_range() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
+        game.create_zord("mroik", 0, 0);
         let success = game.move_zord("mroik", 0, 0, 21, 2);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
@@ -786,10 +745,8 @@ mod tests {
     #[test]
     fn move_zord_cell_occupied() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 1, 1);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 1, 1);
         let success = game.move_zord("mroik", 0, 0, 1, 1);
         assert!(success.is_err());
         let z = game.board.board.first().unwrap().get_zord().unwrap();
@@ -800,71 +757,30 @@ mod tests {
     #[test]
     fn donate_points() {
         let mut game = generate_game();
-        game.players
-            .iter_mut()
-            .find(|p| p.name == "mroik")
-            .unwrap()
-            .points = 100;
+        game.players.get_mut("mroik").unwrap().points = 100;
         game.create_zord("mroik", 0, 0);
         game.create_zord("fin", 1, 1);
         let success = game.donate_points("mroik", "fin", 10);
         assert!(success.is_ok());
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "mroik")
-                .unwrap()
-                .points,
-            90
-        );
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "fin")
-                .unwrap()
-                .points,
-            10
-        );
+        assert_eq!(game.players.get("mroik").unwrap().points, 90);
+        assert_eq!(game.players.get("fin").unwrap().points, 10);
     }
 
     #[test]
     fn donate_points_amount_too_big() {
         let mut game = generate_game();
-        game.players
-            .iter_mut()
-            .find(|p| p.name == "mroik")
-            .unwrap()
-            .points = 10;
+        game.players.get_mut("mroik").unwrap().points = 10;
         let success = game.donate_points("mroik", "fin", 30);
         assert!(success.is_err());
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "mroik")
-                .unwrap()
-                .points,
-            10
-        );
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "fin")
-                .unwrap()
-                .points,
-            0
-        );
+        assert_eq!(game.players.get("mroik").unwrap().points, 10);
+        assert_eq!(game.players.get("fin").unwrap().points, 0);
     }
 
     #[test]
     fn build_zord() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        game.players
-            .iter_mut()
-            .find(|p| p.name == "mroik")
-            .unwrap()
-            .points = 10;
+        game.create_zord("mroik", 0, 0);
+        game.players.get_mut("mroik").unwrap().points = 10;
 
         let success = game.build_zord("mroik", 1, 1);
         let z = game
@@ -875,7 +791,7 @@ mod tests {
             .unwrap()
             .get_zord()
             .unwrap();
-        let p = game.players.get(0).unwrap();
+        let p = game.players.get("mroik").unwrap();
         assert!(success.is_ok());
         assert_eq!(p.actions, 16);
         assert_eq!(p.points, 0);
@@ -885,16 +801,11 @@ mod tests {
     #[test]
     fn build_zord_out_of_range() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        game.players
-            .iter_mut()
-            .find(|p| p.name == "mroik")
-            .unwrap()
-            .points = 10;
+        game.create_zord("mroik", 0, 0);
+        game.players.get_mut("mroik").unwrap().points = 10;
 
         let success = game.build_zord("mroik", 3, 3);
-        let p = game.players.get(0).unwrap();
+        let p = game.players.get("mroik").unwrap();
         assert!(success.is_err());
         assert_eq!(p.actions, 20);
         assert_eq!(p.points, 10);
@@ -904,16 +815,11 @@ mod tests {
     #[test]
     fn build_zord_not_enough_points() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        game.players
-            .iter_mut()
-            .find(|p| p.name == "mroik")
-            .unwrap()
-            .points = 9;
+        game.create_zord("mroik", 0, 0);
+        game.players.get_mut("mroik").unwrap().points = 9;
 
         let success = game.build_zord("mroik", 1, 1);
-        let p = game.players.get(0).unwrap();
+        let p = game.players.get("mroik").unwrap();
         assert!(success.is_err());
         assert_eq!(p.actions, 20);
         assert_eq!(p.points, 9);
@@ -923,62 +829,30 @@ mod tests {
     #[test]
     fn give_out_points() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
+        game.create_zord("mroik", 0, 0);
         let _ = game.create_totem(1, 1);
         game.give_out_totem_points();
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "mroik")
-                .unwrap()
-                .points,
-            50
-        );
+        assert_eq!(game.players.get("mroik").unwrap().points, 50);
     }
 
     #[test]
     fn give_out_points_double() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
-        let p = game.players.get(1).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 1);
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 0, 1);
         let _ = game.create_totem(2, 2);
         game.give_out_totem_points();
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "mroik")
-                .unwrap()
-                .points,
-            25
-        );
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "fin")
-                .unwrap()
-                .points,
-            25
-        );
+        assert_eq!(game.players.get("mroik").unwrap().points, 25);
+        assert_eq!(game.players.get("fin").unwrap().points, 25);
     }
 
     #[test]
     fn give_out_out_of_range() {
         let mut game = generate_game();
-        let p = game.players.get(0).cloned().unwrap();
-        game.create_zord(p.name.as_str(), 0, 0);
+        game.create_zord("mroik", 0, 0);
         let _ = game.create_totem(100, 100);
         game.give_out_totem_points();
-        assert_eq!(
-            game.players
-                .iter()
-                .find(|p| p.name == "mroik")
-                .unwrap()
-                .points,
-            0
-        );
+        assert_eq!(game.players.get("mroik").unwrap().points, 0);
     }
 
     #[test]
