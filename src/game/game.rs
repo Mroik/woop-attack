@@ -309,6 +309,14 @@ impl Game {
     }
 
     fn give_out_totem_points(&mut self) {
+        let zords: Vec<&Zord> = self
+            .board
+            .board
+            .iter()
+            .filter(|z| z.is_zord())
+            .map(|z| z.get_zord().unwrap())
+            .collect();
+
         self.board
             .board
             .iter()
@@ -317,20 +325,15 @@ impl Game {
             .for_each(|totem| {
                 let mut in_bounds = HashMap::new();
                 let mut total = 0;
-                self.board
-                    .board
-                    .iter()
-                    .filter(|z| z.is_zord())
-                    .map(|z| z.get_zord().unwrap())
-                    .for_each(|z| {
-                        if (totem.x - z.x).abs().max((totem.y - z.y).abs()) <= TOTEM_AURA as i16 {
-                            match in_bounds.get(z.owner.as_str()) {
-                                None => in_bounds.insert(z.owner.clone(), 1),
-                                Some(v) => in_bounds.insert(z.owner.clone(), v + 1),
-                            };
-                            total += 1;
-                        }
-                    });
+                zords.iter().for_each(|z| {
+                    if (totem.x - z.x).abs().max((totem.y - z.y).abs()) <= TOTEM_AURA as i16 {
+                        match in_bounds.get(z.owner.as_str()) {
+                            None => in_bounds.insert(z.owner.clone(), 1),
+                            Some(v) => in_bounds.insert(z.owner.clone(), v + 1),
+                        };
+                        total += 1;
+                    }
+                });
 
                 for player in in_bounds.keys() {
                     let many = in_bounds.get(player).unwrap();
