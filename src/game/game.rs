@@ -252,6 +252,7 @@ impl Game {
             return WoopError::out_of_actions();
         }
 
+        // Check if target is your own
         let target = self
             .board
             .board
@@ -259,7 +260,6 @@ impl Game {
             .find(|entity| entity.is_coord(x_t, y_t) && entity.is_zord())
             .unwrap();
 
-        // Check if target is your own
         if target.get_zord().unwrap().owner.as_str() == player {
             return WoopError::own_zord();
         }
@@ -267,12 +267,10 @@ impl Game {
         owner.spend_action(ACTION_COST);
 
         // Shoot and cleanup
-        let mut t_name = String::new();
+        let t_name = target.get_zord().unwrap().owner.clone();
         if target.zord_hit() {
             owner.points += KILL_REWARD;
-            t_name = target.get_zord().unwrap().owner.clone();
         }
-        let target = target.get_zord().unwrap().owner.clone();
         self.clear_dead();
 
         let has_zords = self
@@ -282,13 +280,13 @@ impl Game {
             .filter(|z| z.is_zord() && z.get_zord().unwrap().owner == t_name)
             .count()
             > 0;
-        if !t_name.is_empty() && !has_zords {
+        if !has_zords {
             let t_player = self.players.get_mut(&t_name).unwrap();
             t_player.points = t_player.points * 2 / 3;
         }
 
         self.logged_actions
-            .shoot(player, (x_f, y_f), (x_t, y_t), target.as_str());
+            .shoot(player, (x_f, y_f), (x_t, y_t), t_name.as_str());
         Ok(())
     }
 
