@@ -265,5 +265,5 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .recover(handle_rejection)
         .with(cors)
         .with(logger);
-    warp::serve(routes).run(([127, 0, 0, 1], 6969)).await;
+    warp::serve(routes).run(([0, 0, 0, 0], 6969)).await;
 }
