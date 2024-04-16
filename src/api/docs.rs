@@ -14,6 +14,7 @@ use utoipa::OpenApi;
         crate::api::docs::get_day,
         crate::api::docs::get_activity,
         crate::api::docs::leaderboard,
+        crate::api::docs::authenticate,
     ),
     components(schemas(
         crate::game::entity::Entity,
@@ -166,3 +167,18 @@ pub async fn get_day() {}
 #[allow(dead_code)]
 #[utoipa::path(post, path = "/activity", responses((status = 200, body = Activity),))]
 pub async fn get_activity() {}
+
+/// Endpoint to check credentails
+#[allow(dead_code)]
+#[utoipa::path(
+    post,
+    path = "/auth",
+    params(
+        ("username" = String, Header, example = json!(String::from("mirko.faina"))),
+        ("token" = String, Header, example = json!(String::from("this_is_a_token"))),
+    ),
+    responses(
+        (status = 200, body = Empty),
+    ),
+)]
+pub async fn authenticate() {}
