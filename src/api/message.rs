@@ -22,6 +22,7 @@ pub struct Donate {
 }
 
 #[derive(Serialize, ToSchema)]
+#[serde(rename_all = "snake_case")]
 pub enum Empty {
     Error(String),
     Ok,
