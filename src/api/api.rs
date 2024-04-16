@@ -221,6 +221,20 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         }
     });
 
+    let auth_action = warp::path("auth")
+        .and(warp::header("username"))
+        .and(warp::header("token"))
+        .map({
+            let game = game.clone();
+            move |user: String, token: String| {
+                let game = game.lock().unwrap();
+                if let Err(err) = game.authenticate(user.as_str(), token.as_str()) {
+                    return warp::reply::json(&Empty::Error(err.to_string()));
+                }
+                return warp::reply::json(&Empty::Ok);
+            }
+        });
+
     let docs = warp::path("docs")
         .and(warp::get())
         .map(|| warp::reply::json(&ApiDoc::openapi()));
@@ -240,7 +254,8 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 .or(map_action)
                 .or(leaderboard_action)
                 .or(day_action)
-                .or(log_action),
+                .or(log_action)
+                .or(auth_action),
         )
         .or(docs)
         .or(rapidoc)
