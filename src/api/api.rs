@@ -242,9 +242,10 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         .and(warp::get())
         .map(|| warp::reply::html(RapiDoc::new("/docs").to_html()));
 
-    let cors = warp::cors()
-        .allow_method("POST")
-        .allow_headers(["username", "token"]);
+    let cors =
+        warp::cors()
+            .allow_method("POST")
+            .allow_headers(["username", "token", "Content-Type"]);
     let logger = warp::log("api::api");
     let routes = warp::post()
         .and(
