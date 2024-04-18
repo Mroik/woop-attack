@@ -348,11 +348,8 @@ impl Game {
 
     fn respawn_players(&mut self) {
         let mut rng = thread_rng();
-        let mut players: HashMap<String, i32> = self
-            .players
-            .iter()
-            .map(|(name, _)| (name.clone(), 0))
-            .collect();
+        let mut players: HashMap<String, i32> =
+            self.players.keys().map(|name| (name.clone(), 0)).collect();
 
         self.board
             .board
@@ -499,12 +496,9 @@ impl Game {
             .board
             .board
             .iter()
-            .map(|entity| {
-                let coord = match entity {
-                    Entity::Zord(z) => (z.x, z.y),
-                    Entity::Totem(t) => (t.x, t.y),
-                };
-                coord
+            .map(|entity| match entity {
+                Entity::Zord(z) => (z.x, z.y),
+                Entity::Totem(t) => (t.x, t.y),
             })
             .collect();
 
