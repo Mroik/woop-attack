@@ -231,7 +231,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
                 if let Err(err) = game.authenticate(user.as_str(), token.as_str()) {
                     return warp::reply::json(&Empty::Error(err.to_string()));
                 }
-                return warp::reply::json(&Empty::Ok);
+                warp::reply::json(&Empty::Ok)
             }
         });
 
