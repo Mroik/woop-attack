@@ -95,7 +95,7 @@ pub async fn shield() {}
 #[allow(dead_code)]
 #[utoipa::path(
     post,
-    path = "/increase",
+    path = "/increase-range",
     request_body(
         content = SingleCoord,
         example = json!(SingleCoord {coord: (0, 0)}),
@@ -114,7 +114,7 @@ pub async fn increase_range() {}
 #[allow(dead_code)]
 #[utoipa::path(
     post,
-    path = "/donate",
+    path = "/donate-points",
     request_body(
         content = Donate,
         example = json!(Donate { receiver: String::from("fin"), amount: 10 }),
@@ -133,7 +133,7 @@ pub async fn donate_points() {}
 #[allow(dead_code)]
 #[utoipa::path(
     post,
-    path = "/build",
+    path = "/build-zord",
     request_body(
         content = SingleCoord,
         example = json!(SingleCoord {coord: (0, 0)}),
