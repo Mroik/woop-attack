@@ -1,0 +1,9 @@
+version: "3.3"
+
+services:
+  backend:
+    build:
+      dockerfile: ./Dockerfile
+      context: ./
+    ports:
+      - "6969:6969"
