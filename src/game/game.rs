@@ -521,35 +521,17 @@ impl Game {
     fn spawn_totems(&mut self) {
         let mut rng = rand::thread_rng();
         self.board.board.retain(|t| t.is_zord());
-        let (x_c, y_c) = ((BASE_BOARD_SIZE / 2) as f32, (BASE_BOARD_SIZE / 2) as f32);
         loop {
-            let (x_t, y_t) = (
-                rng.gen_range(0..BASE_BOARD_SIZE) as f32,
-                rng.gen_range(0..BASE_BOARD_SIZE) as f32,
+            let t1 = (
+                rng.gen_range(0..BASE_BOARD_SIZE),
+                rng.gen_range(0..BASE_BOARD_SIZE),
             );
-            if (x_t - x_c).abs() as i16 == 0 || (y_t - y_c).abs() as i16 == 0 {
-                continue;
-            }
-
-            let m = (y_c - y_t) / (x_c - x_t);
-            let q = y_t - (m * x_t);
-            let f = |x: f32| x * m + q;
-
-            let diff = (x_c - x_t).abs();
-            let t1 = ((x_c - diff) as i16, f(x_c - diff) as i16);
-            let t2 = ((x_c + diff) as i16, f(x_c + diff) as i16);
+            let t2 = ((BASE_BOARD_SIZE - 1) - t1.0, (BASE_BOARD_SIZE - 1) - t1.1);
 
             let is_far_enough =
-                (t1.0 - t2.0).abs().max((t1.1 - t2.1).abs()) > (TOTEM_AURA * 2) as i16;
-            let is_in_bounds = t1.0 >= 0
-                && t1.0 < BASE_BOARD_SIZE
-                && t1.1 >= 0
-                && t1.1 < BASE_BOARD_SIZE
-                && t2.0 >= 0
-                && t2.0 < BASE_BOARD_SIZE
-                && t2.1 >= 0
-                && t2.1 < BASE_BOARD_SIZE;
-            if is_far_enough && is_in_bounds {
+                (t1.0 - t2.0).abs().max((t1.1 - t2.1).abs()) as u16 > TOTEM_AURA * 2;
+
+            if is_far_enough {
                 self.create_totem(t1.0, t1.1).unwrap();
                 self.create_totem(t2.0, t2.1).unwrap();
 
