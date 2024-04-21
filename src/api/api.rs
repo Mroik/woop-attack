@@ -7,6 +7,7 @@ use crate::game::game::Game;
 use crate::game::player::Player;
 use std::collections::HashMap;
 use std::convert::Infallible;
+use std::fs;
 use std::sync::{Arc, Mutex};
 use std::time::UNIX_EPOCH;
 use utoipa::OpenApi;
@@ -235,12 +236,27 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
             }
         });
 
+    // Static pages
+    let index_static = warp::path("index.html").map(|| {
+        let body = fs::read("static/index.html").unwrap();
+        warp::reply::html(body)
+    });
+    let style_static = warp::path("style.css").map(|| {
+        let body = fs::read("static/style.css").unwrap();
+        warp::reply::html(body)
+    });
+    let js_static = warp::path("client.js").map(|| {
+        let body = fs::read("static/client.js").unwrap();
+        warp::reply::html(body)
+    });
+
     let docs = warp::path("docs")
         .and(warp::get())
         .map(|| warp::reply::json(&ApiDoc::openapi()));
     let rapidoc = warp::path("rapidoc")
         .and(warp::get())
         .map(|| warp::reply::html(RapiDoc::new("/docs").to_html()));
+    let static_pages = warp::get().and(index_static.or(style_static).or(js_static));
 
     let cors =
         warp::cors()
@@ -263,6 +279,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         )
         .or(docs)
         .or(rapidoc)
+        .or(static_pages)
         .recover(handle_rejection)
         .with(cors)
         .with(logger);
