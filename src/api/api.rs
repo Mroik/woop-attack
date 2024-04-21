@@ -241,6 +241,10 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         let body = fs::read("static/index.html").unwrap();
         warp::reply::html(body)
     });
+    let index_empty_static = warp::path::end().map(|| {
+        let body = fs::read("static/index.html").unwrap();
+        warp::reply::html(body)
+    });
     let style_static = warp::path("style.css").map(|| {
         let body = fs::read("static/style.css").unwrap();
         warp::reply::html(body)
@@ -256,7 +260,12 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
     let rapidoc = warp::path("rapidoc")
         .and(warp::get())
         .map(|| warp::reply::html(RapiDoc::new("/docs").to_html()));
-    let static_pages = warp::get().and(index_static.or(style_static).or(js_static));
+    let static_pages = warp::get().and(
+        index_static
+            .or(index_empty_static)
+            .or(style_static)
+            .or(js_static),
+    );
 
     let cors =
         warp::cors()
