@@ -1,4 +1,3 @@
-mod board;
 pub mod entity;
 pub mod error;
 pub mod game;

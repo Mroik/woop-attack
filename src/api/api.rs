@@ -180,9 +180,7 @@ pub async fn start_api(game: Arc<Mutex<Game>>) {
         let game = game.clone();
         move || {
             let game = game.lock().unwrap();
-            warp::reply::json(&WoopMap {
-                map: &game.board.board,
-            })
+            warp::reply::json(&WoopMap { map: &game.board })
         }
     });
 
