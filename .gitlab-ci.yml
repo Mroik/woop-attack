@@ -15,7 +15,6 @@ run-tests:
   script:
     - rustup component add llvm-tools-preview
     - cargo install cargo-llvm-cov
-    - cargo build
     - cargo llvm-cov test --html
     - cargo llvm-cov report --cobertura --output-path target/llvm-cov/html/coverage/coverage.xml
   artifacts:
