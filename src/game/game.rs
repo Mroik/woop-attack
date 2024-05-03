@@ -1,5 +1,4 @@
 use super::{
-    board::Board,
     entity::Entity,
     error::WoopError,
     log::Logger,
@@ -25,7 +24,7 @@ const MAX_DONATION_PER_ACTION: u16 = 10;
 #[derive(Debug)]
 pub struct Game {
     pub players: HashMap<String, Player>,
-    pub board: Board,
+    pub board: Vec<Entity>,
     pub start_of_day: SystemTime,
     pub day: u8,
     pub auth: HashMap<String, String>,
@@ -53,7 +52,7 @@ impl Game {
 
         Game {
             players,
-            board: Board::new(BASE_BOARD_SIZE),
+            board: Vec::new(),
             start_of_day: SystemTime::now(),
             day: 0,
             auth,
@@ -71,7 +70,6 @@ impl Game {
     pub fn generate_shield(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = match self
-            .board
             .board
             .iter_mut()
             .find(|entity| entity.is_coord(x, y) && entity.is_zord())
@@ -123,13 +121,11 @@ impl Game {
         // shooting
         let mut s_zord = self
             .board
-            .board
             .iter()
             .filter(|z| z.is_zord())
             .map(|z| z.get_zord().unwrap())
             .filter(|z| z.owner.as_str() == from);
         let mut t_zord = self
-            .board
             .board
             .iter()
             .filter(|z| z.is_zord())
@@ -165,13 +161,12 @@ impl Game {
         y_t: i16,
     ) -> Result<(), WoopError> {
         // Check if empty
-        if self.board.board.iter().any(|e| e.is_coord(x_t, y_t)) {
+        if self.board.iter().any(|e| e.is_coord(x_t, y_t)) {
             return WoopError::cell_occupied(x_t, y_t);
         }
 
         // Check if zord in cell
         let zord = match self
-            .board
             .board
             .iter_mut()
             .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord())
@@ -194,7 +189,7 @@ impl Game {
         }
 
         // Check if in bounds
-        if x_t < 0 || x_t >= self.board.size || y_t < 0 || y_t >= self.board.size {
+        if x_t < 0 || x_t >= BASE_BOARD_SIZE || y_t < 0 || y_t >= BASE_BOARD_SIZE {
             return WoopError::out_of_bounds(x_t, y_t);
         }
 
@@ -219,7 +214,6 @@ impl Game {
     ) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = match self
-            .board
             .board
             .iter_mut()
             .find(|entity| entity.is_coord(x_f, y_f) && entity.is_zord())
@@ -255,7 +249,6 @@ impl Game {
         // Check if target is your own
         let target = self
             .board
-            .board
             .iter_mut()
             .find(|entity| entity.is_coord(x_t, y_t) && entity.is_zord())
             .unwrap();
@@ -275,7 +268,6 @@ impl Game {
 
         let has_zords = self
             .board
-            .board
             .iter()
             .filter(|z| z.is_zord() && z.get_zord().unwrap().owner == t_name)
             .count()
@@ -292,7 +284,7 @@ impl Game {
 
     // Clean up dead zords
     fn clear_dead(&mut self) {
-        self.board.board.retain(|entity| {
+        self.board.retain(|entity| {
             if !entity.is_zord() {
                 return true;
             }
@@ -303,12 +295,11 @@ impl Game {
     // Add zord to the board
     fn create_zord(&mut self, player: &str, x: i16, y: i16) {
         let z = Entity::Zord(Zord::new(player, x, y));
-        self.board.board.push(z);
+        self.board.push(z);
     }
 
     fn give_out_totem_points(&mut self) {
         let zords: Vec<&Zord> = self
-            .board
             .board
             .iter()
             .filter(|z| z.is_zord())
@@ -316,7 +307,6 @@ impl Game {
             .collect();
 
         self.board
-            .board
             .iter()
             .filter(|t| !t.is_zord())
             .map(|t| t.get_totem().unwrap())
@@ -352,7 +342,6 @@ impl Game {
             self.players.keys().map(|name| (name.clone(), 0)).collect();
 
         self.board
-            .board
             .iter()
             .filter(|z| z.is_zord())
             .map(|z| z.get_zord().unwrap())
@@ -396,7 +385,7 @@ impl Game {
             .for_each(|(_, player)| player.actions = BASE_ACTIONS);
 
         // Remove shields and reset range
-        self.board.board.iter_mut().for_each(|entity| {
+        self.board.iter_mut().for_each(|entity| {
             if let Entity::Zord(z) = entity {
                 z.range = BASE_RANGE;
                 z.shields = 0;
@@ -407,7 +396,6 @@ impl Game {
     pub fn increase_range(&mut self, player: &str, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if zord in cell
         let zord = match self
-            .board
             .board
             .iter_mut()
             .find(|entity| entity.is_coord(x, y) && entity.is_zord())
@@ -438,7 +426,6 @@ impl Game {
         // Check if (x, y) is nearby another zord
         if !self
             .board
-            .board
             .iter()
             .any(|z| z.is_zord() && z.distance(x, y) <= 1 && z.get_zord().unwrap().owner == player)
         {
@@ -468,7 +455,7 @@ impl Game {
         p.spend_action(ACTION_COST);
         p.points -= NEW_ZORD_COST;
         self.create_zord(player, x, y);
-        self.board.board.last_mut().unwrap().zord_hit();
+        self.board.last_mut().unwrap().zord_hit();
 
         self.logged_actions.build_zord(player, (x, y));
         Ok(())
@@ -476,11 +463,11 @@ impl Game {
 
     fn create_totem(&mut self, x: i16, y: i16) -> Result<(), WoopError> {
         // Check if cell is empty
-        if self.board.board.iter().any(|e| e.is_coord(x, y)) {
+        if self.board.iter().any(|e| e.is_coord(x, y)) {
             return WoopError::cell_occupied(x, y);
         }
 
-        self.board.board.push(Entity::Totem(Totem::new(x, y)));
+        self.board.push(Entity::Totem(Totem::new(x, y)));
         Ok(())
     }
 
@@ -488,12 +475,11 @@ impl Game {
     fn calculate_respawn_coordinates(&self) -> (i16, i16) {
         let mut ris = (0, 0);
         let mut r_dis = 0;
-        if self.board.board.iter().filter(|z| z.is_zord()).count() == 0 {
+        if self.board.iter().filter(|z| z.is_zord()).count() == 0 {
             return ris;
         }
 
         let zords_on_board: Vec<(i16, i16)> = self
-            .board
             .board
             .iter()
             .map(|entity| match entity {
@@ -520,7 +506,7 @@ impl Game {
 
     fn spawn_totems(&mut self) {
         let mut rng = rand::thread_rng();
-        self.board.board.retain(|t| t.is_zord());
+        self.board.retain(|t| t.is_zord());
         loop {
             let t1 = (
                 rng.gen_range(0..BASE_BOARD_SIZE),
@@ -587,7 +573,7 @@ mod tests {
         let points = game.players.get("mroik").unwrap().points;
         let t_points = game.players.get("fin").unwrap().points;
         assert!(success.is_ok());
-        assert_eq!(game.board.board.len(), 1);
+        assert_eq!(game.board.len(), 1);
         assert_eq!(points, 3);
         assert_eq!(t_points, 100 * 2 / 3);
     }
@@ -600,7 +586,7 @@ mod tests {
         let _ = game.player_shoot("mroik", 0, 0, 1, 1);
         let success = game.player_shoot("mroik", 0, 0, 1, 1);
         assert!(success.is_err());
-        assert_eq!(game.board.board.len(), 2);
+        assert_eq!(game.board.len(), 2);
         assert_eq!(game.players.get("mroik").unwrap().points, 0);
     }
 
@@ -639,7 +625,7 @@ mod tests {
         let mut game = generate_game();
         game.create_zord("mroik", 0, 0);
         let success = game.generate_shield("mroik", 0, 0);
-        let zord = game.board.board.first().unwrap().get_zord().unwrap();
+        let zord = game.board.first().unwrap().get_zord().unwrap();
         assert!(success.is_ok());
         assert_eq!(zord.shields, 1);
     }
@@ -652,7 +638,7 @@ mod tests {
             let _ = game.generate_shield("mroik", 0, 0);
         }
         let success = game.generate_shield("mroik", 0, 0);
-        let zord = game.board.board.first().unwrap().get_zord().unwrap();
+        let zord = game.board.first().unwrap().get_zord().unwrap();
         assert!(success.is_err());
         assert_eq!(zord.shields, 5);
     }
@@ -662,10 +648,7 @@ mod tests {
         let mut game = generate_game();
         game.create_zord("mroik", 0, 0);
         let _ = game.increase_range("mroik", 0, 0);
-        assert_eq!(
-            game.board.board.first().unwrap().get_zord().unwrap().range,
-            6
-        );
+        assert_eq!(game.board.first().unwrap().get_zord().unwrap().range, 6);
         assert_eq!(game.players.get("mroik").unwrap().actions, 18);
     }
 
@@ -677,13 +660,13 @@ mod tests {
         let _ = game.generate_shield("mroik", 0, 0);
         let _ = game.increase_range("mroik", 0, 0);
         game.new_day();
-        let zord = game.board.board.first().unwrap().get_zord().unwrap();
+        let zord = game.board.first().unwrap().get_zord().unwrap();
         assert_eq!(game.day, 2);
         assert_eq!(game.players.get("mroik").unwrap().actions, BASE_ACTIONS);
         assert_eq!(zord.range, BASE_RANGE);
         assert_eq!(zord.shields, 0);
-        assert_eq!(game.board.board.iter().filter(|z| z.is_zord()).count(), 3);
-        assert_eq!(game.board.board.iter().filter(|z| !z.is_zord()).count(), 2);
+        assert_eq!(game.board.iter().filter(|z| z.is_zord()).count(), 3);
+        assert_eq!(game.board.iter().filter(|z| !z.is_zord()).count(), 2);
     }
 
     #[test]
@@ -692,7 +675,7 @@ mod tests {
         game.create_zord("mroik", 0, 0);
         let success = game.move_zord("mroik", 0, 0, 1, 1);
         assert!(success.is_ok());
-        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        let z = game.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 1);
         assert_eq!(z.y, 1);
     }
@@ -703,7 +686,7 @@ mod tests {
         game.create_zord("mroik", 0, 0);
         let success = game.move_zord("mroik", 0, 0, -1, -1);
         assert!(success.is_err());
-        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        let z = game.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
         assert_eq!(z.y, 0);
     }
@@ -714,7 +697,7 @@ mod tests {
         game.create_zord("mroik", 0, 0);
         let success = game.move_zord("mroik", 0, 0, 21, 2);
         assert!(success.is_err());
-        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        let z = game.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
         assert_eq!(z.y, 0);
     }
@@ -726,7 +709,7 @@ mod tests {
         game.create_zord("fin", 1, 1);
         let success = game.move_zord("mroik", 0, 0, 1, 1);
         assert!(success.is_err());
-        let z = game.board.board.first().unwrap().get_zord().unwrap();
+        let z = game.board.first().unwrap().get_zord().unwrap();
         assert_eq!(z.x, 0);
         assert_eq!(z.y, 0);
     }
@@ -762,7 +745,6 @@ mod tests {
         let success = game.build_zord("mroik", 1, 1);
         let z = game
             .board
-            .board
             .iter()
             .find(|z| z.is_zord() && z.is_coord(1, 1))
             .unwrap()
@@ -786,7 +768,7 @@ mod tests {
         assert!(success.is_err());
         assert_eq!(p.actions, 20);
         assert_eq!(p.points, 10);
-        assert_eq!(game.board.board.iter().len(), 1);
+        assert_eq!(game.board.iter().len(), 1);
     }
 
     #[test]
@@ -800,7 +782,7 @@ mod tests {
         assert!(success.is_err());
         assert_eq!(p.actions, 20);
         assert_eq!(p.points, 9);
-        assert_eq!(game.board.board.iter().len(), 1);
+        assert_eq!(game.board.iter().len(), 1);
     }
 
     #[test]
@@ -836,6 +818,6 @@ mod tests {
     fn respawn() {
         let mut game = generate_game();
         game.respawn_players();
-        assert_eq!(game.board.board.len(), 3);
+        assert_eq!(game.board.len(), 3);
     }
 }
