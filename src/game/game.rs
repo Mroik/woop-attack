@@ -326,11 +326,11 @@ impl Game {
                 for player in in_bounds.keys() {
                     let many = in_bounds.get(player).unwrap();
                     let p = self.players.get_mut(player).unwrap();
-                    p.points += TOTEM_REWARD / total * many;
+                    p.points += TOTEM_REWARD * many / total;
                     self.logged_actions.totem_points(
                         player.as_str(),
                         (totem.x, totem.y),
-                        TOTEM_REWARD / total * many,
+                        TOTEM_REWARD * many / total,
                     );
                 }
             });
