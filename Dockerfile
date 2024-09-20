@@ -1,7 +1,6 @@
-FROM rust:1.77.2-slim
+FROM rust:1.81.0-alpine AS builder
 
-RUN apt update -y
-RUN apt install -y npm
+RUN apk add npm musl-dev
 RUN npm install -g typescript
 
 COPY . /app
@@ -13,4 +12,8 @@ RUN cargo b -r
 RUN cp target/release/woop-attack .
 RUN cargo clean
 
+FROM alpine:3.20.3
+RUN mkdir /app
+COPY --from=builder /app /app
+WORKDIR /app
 ENTRYPOINT ["./woop-attack", "conf.toml"]
