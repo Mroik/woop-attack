@@ -285,12 +285,10 @@ impl Game {
     }
 
     fn give_out_totem_points(&mut self) {
-        let zords: Vec<&Zord> = self.zords.iter().collect();
-
-        let mut points = |totem: &mut Totem| {
+        let mut points = |totem: &Totem| {
             let mut in_bounds = HashMap::new();
             let mut total = 0;
-            zords.iter().for_each(|z| {
+            self.zords.iter().for_each(|z| {
                 if (totem.x - z.x).abs().max((totem.y - z.y).abs()) <= TOTEM_AURA as i16 {
                     match in_bounds.get(z.owner.as_str()) {
                         None => in_bounds.insert(z.owner.clone(), 1),
@@ -311,8 +309,8 @@ impl Game {
                 );
             }
         };
-        points(&mut self.totems.0);
-        points(&mut self.totems.1);
+        points(&self.totems.0);
+        points(&self.totems.1);
     }
 
     fn respawn_players(&mut self) {
