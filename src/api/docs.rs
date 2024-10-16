@@ -17,7 +17,6 @@ use utoipa::OpenApi;
         crate::api::docs::authenticate,
     ),
     components(schemas(
-        crate::game::entity::Entity,
         crate::game::zord::Zord,
         crate::game::totem::Totem,
         crate::game::player::Player,
