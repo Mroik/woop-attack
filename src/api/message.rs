@@ -1,4 +1,4 @@
-use crate::game::{entity::Entity, log::PlayerEvent, player::Player};
+use crate::game::{log::PlayerEvent, player::Player, totem::Totem, zord::Zord};
 use serde::{Deserialize, Serialize};
 use utoipa::{IntoParams, ToSchema};
 
@@ -30,7 +30,8 @@ pub enum Empty {
 
 #[derive(Serialize, ToSchema)]
 pub struct WoopMap<'a> {
-    pub map: &'a Vec<Entity>,
+    pub zords: &'a Vec<Zord>,
+    pub totems: (&'a Totem, &'a Totem),
 }
 
 #[derive(Serialize, ToSchema)]
