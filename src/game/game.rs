@@ -491,7 +491,12 @@ mod tests {
     use super::Game;
     use crate::{
         config::Config,
-        game::{game::GRACE_PERIOD, player::BASE_ACTIONS, zord::BASE_RANGE},
+        game::{
+            game::{BASE_BOARD_SIZE, GRACE_PERIOD},
+            player::BASE_ACTIONS,
+            totem::Totem,
+            zord::BASE_RANGE,
+        },
     };
     use std::time::{Duration, SystemTime};
 
@@ -737,34 +742,40 @@ mod tests {
 
     #[test]
     fn give_out_points() {
-        // TODO Make new test
-        //let mut game = generate_game();
-        //game.create_zord("mroik", 0, 0);
-        //let _ = game.create_totem(1, 1);
-        //game.give_out_totem_points();
-        //assert_eq!(game.players.get("mroik").unwrap().points, 50);
+        let mut game = generate_game();
+        game.create_zord("mroik", 0, 0);
+        game.totems = (
+            Totem::new(0, 1),
+            Totem::new(BASE_BOARD_SIZE - 1, BASE_BOARD_SIZE - 1),
+        );
+        game.give_out_totem_points();
+        assert_eq!(game.players.get("mroik").unwrap().points, 50);
     }
 
     #[test]
     fn give_out_points_double() {
-        // TODO Make new test
-        //let mut game = generate_game();
-        //game.create_zord("mroik", 0, 0);
-        //game.create_zord("fin", 0, 1);
-        //let _ = game.create_totem(2, 2);
-        //game.give_out_totem_points();
-        //assert_eq!(game.players.get("mroik").unwrap().points, 25);
-        //assert_eq!(game.players.get("fin").unwrap().points, 25);
+        let mut game = generate_game();
+        game.create_zord("mroik", 0, 0);
+        game.create_zord("fin", 0, 1);
+        game.totems = (
+            Totem::new(2, 2),
+            Totem::new(BASE_BOARD_SIZE - 1, BASE_BOARD_SIZE - 1),
+        );
+        game.give_out_totem_points();
+        assert_eq!(game.players.get("mroik").unwrap().points, 25);
+        assert_eq!(game.players.get("fin").unwrap().points, 25);
     }
 
     #[test]
     fn give_out_out_of_range() {
-        // TODO Make new test
-        //let mut game = generate_game();
-        //game.create_zord("mroik", 0, 0);
-        //let _ = game.create_totem(100, 100);
-        //game.give_out_totem_points();
-        //assert_eq!(game.players.get("mroik").unwrap().points, 0);
+        let mut game = generate_game();
+        game.create_zord("mroik", 0, 0);
+        game.totems = (
+            Totem::new(BASE_BOARD_SIZE - 2, BASE_BOARD_SIZE - 2),
+            Totem::new(BASE_BOARD_SIZE - 1, BASE_BOARD_SIZE - 1),
+        );
+        game.give_out_totem_points();
+        assert_eq!(game.players.get("mroik").unwrap().points, 0);
     }
 
     #[test]
