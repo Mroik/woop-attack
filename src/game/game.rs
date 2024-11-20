@@ -443,12 +443,14 @@ impl Game {
             return ris;
         }
 
-        let zords_on_board: Vec<(i16, i16)> =
+        let mut entities_on_board: Vec<(i16, i16)> =
             self.zords.iter().map(|zord| (zord.x, zord.y)).collect();
+        entities_on_board.push((self.totems.0.x, self.totems.0.y));
+        entities_on_board.push((self.totems.1.x, self.totems.1.y));
 
         for y_f in 0..BASE_BOARD_SIZE {
             for x_f in 0..BASE_BOARD_SIZE {
-                let distance = zords_on_board
+                let distance = entities_on_board
                     .iter()
                     .map(|(x, y)| ((x_f - x).abs().max((y_f - y).abs()), x, y))
                     .min()
