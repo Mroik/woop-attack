@@ -1,4 +1,4 @@
-FROM rust:1.81.0-alpine AS builder
+FROM rust:1.91.1-alpine AS builder
 
 RUN apk add npm musl-dev
 RUN npm install -g typescript
