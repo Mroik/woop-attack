@@ -7,7 +7,7 @@ use super::{
 };
 use crate::config::Config;
 use base64::{engine::general_purpose::URL_SAFE, Engine};
-use rand::{thread_rng, Rng};
+use rand::{rng, Rng};
 use sha2::{Digest, Sha256};
 use std::{collections::HashMap, time::SystemTime};
 
@@ -39,11 +39,11 @@ impl Game {
             .map(|name| (name.clone(), Player::new(name)))
             .collect();
 
-        let mut rng = rand::thread_rng();
+        let mut rng = rng();
         let mut auth = HashMap::new();
         players.iter().for_each(|(_, p)| {
             let mut hasher = Sha256::new();
-            hasher.update(rng.gen::<[u8; 32]>());
+            hasher.update(rng.random::<[u8; 32]>());
             let data = hasher.finalize().to_vec();
             let mut password = URL_SAFE.encode(data);
             password.truncate(100);
@@ -314,7 +314,7 @@ impl Game {
     }
 
     fn respawn_players(&mut self) {
-        let mut rng = thread_rng();
+        let mut rng = rng();
         let mut players: HashMap<String, i32> =
             self.players.keys().map(|name| (name.clone(), 0)).collect();
 
@@ -329,7 +329,7 @@ impl Game {
             .map(|(p, _)| p)
             .collect();
         while !to_spawn.is_empty() {
-            let player = to_spawn.remove(rng.gen_range(0..to_spawn.len()));
+            let player = to_spawn.remove(rng.random_range(0..to_spawn.len()));
             let (x, y) = self.calculate_respawn_coordinates();
             self.create_zord(player.as_str(), x, y);
             self.logged_actions.respawn(player, (x, y));
@@ -465,11 +465,11 @@ impl Game {
     }
 
     fn spawn_totems(&mut self) {
-        let mut rng = rand::thread_rng();
+        let mut rng = rng();
         loop {
             let t1 = (
-                rng.gen_range(0..BASE_BOARD_SIZE),
-                rng.gen_range(0..BASE_BOARD_SIZE),
+                rng.random_range(0..BASE_BOARD_SIZE),
+                rng.random_range(0..BASE_BOARD_SIZE),
             );
             let t2 = ((BASE_BOARD_SIZE - 1) - t1.0, (BASE_BOARD_SIZE - 1) - t1.1);
 

@@ -1,4 +1,6 @@
-use crate::api::message::{Donate, DoubleCoord, SingleCoord};
+use crate::api::message::{
+    Activity, Donate, DoubleCoord, Empty, GameInfo, Leaderboard, SingleCoord, WoopMap,
+};
 use utoipa::OpenApi;
 
 #[derive(OpenApi)]
